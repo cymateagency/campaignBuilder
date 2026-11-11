@@ -1,0 +1,35 @@
+{
+  "name": "Meeting_ExampleAngle",
+  "max_new_leads_per_day": 300,
+  "segment_field": "segment",
+  "brief": "CLIENT: Example Co - ...\nOFFER: ...\nOUTCOME FOR THE READER: ...\nUNIQUE MECHANISM: ...\nRISK REDUCTION: ...\nPROOF: ...\nPAIN POINTS: ...\nBANNED WORDS AND TOPICS: ...\nSEGMENTS:\n- ...\nSOFT CTA: Open to learning more?\nSUBJECT LINES: ...",
+  "framework_choice": "one line: why this framework fits the group, offer and signal",
+  "slots": {
+    "MEDIUM": {
+      "framework": "TFKD",
+      "fallback_subject": "...",
+      "fallback_body": "Hey {first_name}, ..."
+    }
+  },
+  "signature": {
+    "closers": [
+      "Appreciate it",
+      "Best regards",
+      "Thanks"
+    ],
+    "titles": [
+      "<sender title, e.g. Client Partner>"
+    ],
+    "website": "client-website.com"
+  },
+  "followups": [
+    {
+      "delay_days": 3,
+      "body_html": "<div>{{first_name}}, ...</div>"
+    },
+    {
+      "delay_days": 4,
+      "body_html": "<div>{{first_name}}, last note from me. ...</div>"
+    }
+  ]
+}

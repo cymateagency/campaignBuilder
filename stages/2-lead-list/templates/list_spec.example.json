@@ -1,0 +1,67 @@
+{
+  "segment": "Mid-market security teams",
+  "titles": {
+    "include": [
+      "chief information security officer",
+      "ciso",
+      "vp of security",
+      "director of information security",
+      "head of security",
+      "soc manager"
+    ],
+    "exclude": [
+      "assistant",
+      "intern",
+      "coordinator",
+      "analyst",
+      "engineer",
+      "consultant",
+      "sales",
+      "marketing",
+      "recruiter"
+    ],
+    "match": "WORD"
+  },
+  "seniority": {
+    "include": [
+      "c_suite",
+      "vp",
+      "director",
+      "head",
+      "manager"
+    ]
+  },
+  "hq_location": {
+    "include": [
+      {
+        "continent": "North America",
+        "country": "United States"
+      }
+    ]
+  },
+  "employees": {
+    "min": 200,
+    "max": 10000
+  },
+  "revenue": "25M+",
+  "industry": {
+    "exclude": [
+      "Hospitals And Health Care",
+      "Government Administration",
+      "Higher Education",
+      "Computer And Network Security",
+      "It Services And It Consulting"
+    ]
+  },
+  "company_type": {
+    "exclude": [
+      "government_agency",
+      "non_profit",
+      "educational"
+    ]
+  },
+  "exclude_mail_security": [
+    "proofpoint",
+    "mimecast"
+  ]
+}
