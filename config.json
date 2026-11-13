@@ -1,0 +1,42 @@
+{
+  "airtable": {
+    "base": "applraTn50dXBSMrM",
+    "clients_table": "tblt13hM89s9U72J9",
+    "client_name_field": "fldZk1XJa6aGNr2KY",
+    "cymate_record": "Juan-Test",
+    "client_fields": {
+      "smartlead": "fld0DPqzJj7tQcYnC",
+      "octave": "fldoRVFOrzVVyWeXf",
+      "octave_mcp_url": "fldEjSsHO7q54U0bi"
+    },
+    "shared_fields": {
+      "octave": "fldoRVFOrzVVyWeXf",
+      "aiark": "fldG6pobmRSfaKNSJ",
+      "aiark_webhook": "fldMbcIUvDfKAZ5U3",
+      "leadmagic": "fldTbAWguUz2j5Osi",
+      "icypeas": "fldChArAAYdqmjyzs",
+      "millionverifier": "fldtl85Jfuz6qVaw3",
+      "bounceban": "fld85jgA7Er0Lm5Aj"
+    },
+    "shared_fields_note": "Test setup: existing Clients columns reused on the Juan-Test row. aiark=Guarantee/Trial/Downsell, leadmagic=Team 2, icypeas=Team 3, millionverifier=Team 4, bounceban=Tasks 2. aiark_webhook=Team (AI Ark requires a webhook URL on export; the script still polls and downloads itself)."
+  },
+  "octave_workspace": "wa_tyu7ADUP46LJGy5fu2GfA",
+  "octave_template_agents": {
+    "TFKD": "ca_gdXH5Mfu6Lk8Fwhqg5Dcb",
+    "STANDARD_GO_TO": "ca_VahcGJxKyAEZQ37RjwHkl",
+    "TWO_SENTENCE_PAIN": "ca_2dw0tziNgfowvykuLgUVX",
+    "POKE_THE_BEAR": "ca_8vCSaYuWQSZj5WSX9gbC1",
+    "TALKING_TO_OTHER_FOLKS": "ca_z3bfT8kesDMJ3G5wG9FaK"
+  },
+  "slot_names": {
+    "LONG": "[LONG]",
+    "MEDIUM": "[MEDIUM]",
+    "SHORT": "[SHORT]",
+    "SHORT_B": "[SHORT_B]"
+  },
+  "held_gateways": [
+    "proofpoint",
+    "mimecast",
+    "ironport"
+  ]
+}
