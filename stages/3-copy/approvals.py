@@ -8,7 +8,7 @@
 
 Every approval is tied to the campaign_spec.json version it was given for (its hash). Changing the brief, the
 framework or the fallback copy after feedback starts a new round: re-test, CSM approves again, client reviews again.
-octave_copy.py (full run) and smartlead_build.py refuse to run until the client approved the current version.
+octave_copy.py (full run) and stages/4-campaign/export_for_builder.py refuse to run until the client approved the current version.
 Internal tests can pass --skip-client-approval to those two scripts.
 """
 import hashlib, json, sys
@@ -134,7 +134,7 @@ def client_approve(d, note=""):
 
 
 def require_client_approval(d, what):
-    """Called by octave_copy.py (full run) and smartlead_build.py."""
+    """Called by octave_copy.py (full run) and export_for_builder.py."""
     if "--skip-client-approval" in sys.argv:
         print("NOTE: --skip-client-approval: running without client approval (internal test only)")
         return

@@ -187,42 +187,42 @@ check(A.client_approved(str(d)), "client approval recorded for the current versi
 O.main(str(d))
 check(len(runs) == 24, f"full run only pays for the 1 new lead (runs={len(runs)})")
 
-# --- smartlead_build
-import smartlead_build as S
-S.smartlead_key = lambda c: "k"; sent = {}; FAIL = [True]
-def sl_http(m, url, body=None, h=None, **k):
-    key = url.split("/api/v1/")[1].split("?")[0]
-    sent.setdefault(key, []).append(body)
-    if key == "campaigns/R1": return 200, {"scheduler_cron_value": {"tz": "America/New_York"}, "ai_categorisation_options": [1, {"id": 2}]}
-    if key == "campaigns/R1/email-accounts": return 200, [{"id": 5}]
-    if key == "campaigns/create": return 200, {"id": 99}
-    if key.endswith("/schedule") and FAIL[0]: return 400, {"error": "bad tz"}
-    if key.endswith("/leads"): return 200, {"upload_count": len(body["lead_list"])}
-    return 200, {"ok": True}
-S.http = sl_http
+# --- stage 4: export for Jairo's campaign-builder skill
+import export_for_builder as X
+spec = json.loads((d / "campaign_spec.json").read_text(encoding="utf-8"))
+spec["slots"] = {"LONG": spec["slots"]["LONG"]}  # one framework per campaign
+spec.pop("type", None); spec.pop("name", None)
+(d / "campaign_spec.json").write_text(json.dumps(spec), encoding="utf-8")
+opts = {"mailboxes_from": "123", "subsequence_from": "456"}
 try:
-    S.main("Client", str(d), "R1", False, False); check(False, "should stop")
+    X.build(str(d), "Client", opts); check(False, "export without a reply-agent type should stop")
 except SystemExit as e:
-    check("Campaign 99" in str(e) and "schedule" in str(e), "stops at failed call and names the partial draft")
+    check("reply-agent type" in str(e), "export needs the reply-agent type")
+spec.update(type="ColdOutreach", name="Meeting_x")
+(d / "campaign_spec.json").write_text(json.dumps(spec), encoding="utf-8")
 try:
-    S.main("Client", str(d), "R1", False, False); check(False, "should refuse")
+    X.build(str(d), "Client", opts); check(False, "wrong prefix should stop")
 except SystemExit as e:
-    check("already built campaign 99" in str(e), "refuses a second build for the same run")
-FAIL[0] = False; sent.clear()
-S.main("Client", str(d), "R1", False, True)
-var = sent["campaigns/99/sequences"][0]["sequences"][0]["seq_variants"][0]["email_body"]
-check(var.startswith("{{email_long}}<br><div>{Appreciate it|Best regards|Thanks},</div><div>%sender-firstname%</div>")
-      and "client-website․com" in var and var.endswith("<br><div>{{ps_long}}</div>"), "LONG variant: body, signature (first name, title, unlinked site), then P.S.")
-fu = sent["campaigns/99/sequences"][0]["sequences"][1]["email_body"]
-check("%sender-firstname%" in fu, "follow ups get the same signature")
-var_b = sent["campaigns/99/sequences"][0]["sequences"][0]["seq_variants"][1]["email_body"]
-check("ps_" not in var_b, "slots without a P.S. get no P.S. line")
-lf = sent["campaigns/99/leads"][0]["lead_list"][0]["custom_fields"]
-check(lf.get("ps_long") == "P.S. like a map &amp; compass." and "ps_medium" not in lf, "P.S. uploaded as a custom field")
-cf = sent["campaigns/99/leads"][0]["lead_list"][0]["custom_fields"]["email_long"]
-check(cf == "<div>Hey Zoë,</div><br><div>Line 2 &amp; &lt;ok&gt;.</div>", f"email converted to HTML: {cf}")
-check(sent["campaigns/99/settings"][0]["ai_categorisation_options"] == [1, 2], "category ids handle ints and dicts")
-check(common.load_state(d)["stages"]["build"]["done"] is True, "build recorded in state.json")
-check("Zoë" in (d / "upload.csv").read_text(encoding="utf-8-sig"), "upload.csv UTF-8")
+    check('must start with "ColdOutreach_"' in str(e), "campaign name must start with the reply-agent type")
+spec["name"] = "ColdOutreach_banks_cto_200-2000_us_aiark_nov"
+(d / "campaign_spec.json").write_text(json.dumps(spec), encoding="utf-8")
+try:
+    X.build(str(d), "Client", {"mailboxes_from": "123"}); check(False, "no subsequence should stop")
+except SystemExit as e:
+    check("goal subsequence" in str(e), "export asks for the goal subsequence")
+common.write_jsonl(d / "copy.jsonl", [dict(l, copy_long_source="agent", subject_long="hi", email_long="Hey Zoë,\n\nLine 2 & <ok>.",
+                                       ps_long="P.S. map") for l in common.read_jsonl(d / "copy.jsonl")])
+out = X.build(str(d), "Client", opts)
+e1 = out["sequence"]["steps"][0]
+check(e1["subject"] == "{{Email_Subject}}" and e1["body"][0] == "{{Email_Copy}}" and "%sender-firstname%" in e1["body"]
+      and "client-website․com" in e1["body"] and e1["body"][-1] == "{{PS}}", "Email 1: copy, signature (first name, unlinked site), P.S.")
+fu = out["sequence"]["steps"][1]["body"]
+check("%sender-firstname%" in fu and out["subsequence"] == {"mode": "clone", "source_campaign_id": 456}
+      and out["schedule"]["max_new_leads_per_day"] >= 444, "follow ups signed, subsequence cloned, SOP 444/day")
+import csv as _csv
+rows = list(_csv.DictReader(open(d / "builder" / "leads.csv", encoding="utf-8")))
+check(len(rows) == 6 and rows[0]["Email_Copy"] == "<div>Hey Zoë,</div><br><div>Line 2 &amp; &lt;ok&gt;.</div>"
+      and rows[0]["Framework"] == "STANDARD_GO_TO", "leads.csv: one row per lead, Email_Copy as HTML, framework column")
+check(X.html_to_lines("<div>A</div><br><div>B</div>") == ["A", "", "B"], "follow up HTML keeps paragraph breaks")
 shutil.rmtree(tmp)
 print("\nALL PASS" if not fails else f"\n{len(fails)} FAILED")

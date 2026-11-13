@@ -1,6 +1,7 @@
 {
-  "name": "Meeting_ExampleAngle",
-  "max_new_leads_per_day": 300,
+  "type": "ColdOutreach",
+  "name": "ColdOutreach_<segment>_<titles>_<size>_<geo>_<source>_<month>",
+  "max_new_leads_per_day": 444,
   "segment_field": "segment",
   "brief": "CLIENT: Example Co - ...\nOFFER: ...\nOUTCOME FOR THE READER: ...\nUNIQUE MECHANISM: ...\nRISK REDUCTION: ...\nPROOF: ...\nPAIN POINTS: ...\nBANNED WORDS AND TOPICS: ...\nSEGMENTS:\n- ...\nSOFT CTA: Open to learning more?\nSUBJECT LINES: ...",
   "framework_choice": "one line: why this framework fits the group, offer and signal",

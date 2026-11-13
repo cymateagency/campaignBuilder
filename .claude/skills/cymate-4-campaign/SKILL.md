@@ -1,20 +1,25 @@
 ---
 name: cymate-4-campaign
-description: Stage 4 of the Cymate campaign pipeline. Build the Smartlead campaign as a DRAFT from the approved copy, copying settings, schedule and mailboxes from one of the client's live campaigns, with the Cymate signature, then read it back. Use for "build the campaign", "drop the campaign in Smartlead", or after the client approved the copy in stage 3.
+description: Stage 4 of the Cymate campaign pipeline. Turn the client-approved copy from stage 3 into the inputs of the campaign-builder skill (Jairo's, the Cymate Smartlead SOP builder) and build the campaign as a DRAFT with its goal subsequence. Use for "build the campaign", "drop the campaign in Smartlead", or after the client approved the copy in stage 3.
 ---
 
-# Stage 4: Campaign (Smartlead draft)
+# Stage 4: Campaign (Smartlead draft via campaign-builder)
 
-Read `CLAUDE.md` and `stages/4-campaign/reference/smartlead_defaults.md`. Run commands with `python` from the repo root. `R` is the run folder.
+The Smartlead build is done by the **`campaign-builder`** skill (Cymate org skill, maintained by Jairo): SOP settings, the goal subsequence the reply agent needs, the SOP checklist, resume after errors, handoff. This stage only prepares its inputs, so the SOP lives in one place.
+Run commands with `python` from the repo root. `R` is the run folder.
 
 **In:** `copy.jsonl` and `campaign_spec.json` from stage 3, with the client's approval recorded in `state.json`.
-**Out:** a DRAFT Smartlead campaign, `campaign_id` and `upload.csv` in the run folder.
+**Out:** `R/builder/spec.json` + `R/builder/leads.csv`, then a DRAFT campaign and subsequence built by campaign-builder.
 
-1. Find a live campaign of the client to copy settings from (ask the CSM for its id).
-2. `python stages/4-campaign/smartlead_build.py "<client>" R --reference <id> --dry-run`: checks the signature and writes `upload.csv`.
-3. `python stages/4-campaign/smartlead_build.py "<client>" R --reference <id>`: settings, schedule and mailboxes from the reference, Email 1 from each lead's custom fields, the signature on Email 1 and every follow up, leads 100 at a time, left as DRAFT. Refuses to run before the client approved the copy, and refuses a second build for the same run unless `--new`. `--no-mailboxes` only for internal tests (the draft can't send).
-4. Read the campaign back (status, settings, schedule, sequences, lead count, one lead's custom fields) and report.
+1. Make sure `R/campaign_spec.json` has:
+   - `"type"`: the client's reply-agent type (`ColdOutreach`, `Podcast`, `Signups`, `Form`, `Partnership`, `Webinar`, `Referral`); ask the CSM, it must match the reply-agent config.
+   - `"name"`: `<type>_<segment>_<titles>_<size>_<geo>_<source>_<month>`, e.g. `ColdOutreach_banks_dataleaders_200-2000_us_aiark_nov`. Suggest one, the CSM confirms.
+   - `"signature"` with the sender's real title (ask the CSM; never invent it).
+2. Find, in the client's Smartlead (or ask the CSM): a live campaign whose mailboxes to reuse, and the client's existing goal subsequence (`<type>_Subsequence`, newest one with that prefix).
+3. Export:
+   `python stages/4-campaign/export_for_builder.py R --mailboxes-from <campaign_id> --subsequence-from <subsequence_id> --source <list tag, e.g. aiark_us_net_new>`
+   Optional: `--mailbox-ids 1,2,3` instead of `--mailboxes-from`, `--start-date YYYY-MM-DD` (default next business day), `--max-per-day` (SOP minimum 444). It refuses before the client approved the current copy.
+   Email 1 is `{{Email_Copy}}` (each lead's approved email) + the signature + `{{PS}}` when the framework writes one; the subject is `{{Email_Subject}}`; follow ups get the same signature.
+4. Run the **campaign-builder** skill with `DIR = R/builder` (the spec and CSV are already written: skip its input collection and spec writing, start at its "Get the client's Smartlead key" step): validate, dry run and show the plan, build after the CSM's OK, hand off the manual steps.
 
-Signature (same as the live client campaigns): `{Appreciate it|Best regards|Thanks},` / sender first name / title / website written with a one dot leader (․) so it isn't a link.
-
-**Gate: the CSM starts the campaign in Smartlead.** Never start it.
+**Gate: the CSM starts the campaign** after the handoff checklist. Never start it unless they say so after seeing the handoff.
