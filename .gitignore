@@ -1,0 +1,6 @@
+runs/*
+!runs/.gitkeep
+.cache/
+__pycache__/
+*.pyc
+.env

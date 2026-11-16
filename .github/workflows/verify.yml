@@ -1,0 +1,20 @@
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: AI Ark payload builder matches the app capture
+        run: python stages/2-lead-list/tests/test_payload.py
+      - name: Offline simulation of every stage (fake APIs, no keys, no credits)
+        run: python tests/test_offline.py
