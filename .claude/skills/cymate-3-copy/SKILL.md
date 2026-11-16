@@ -30,3 +30,6 @@ Fix the agent (Octave `update_agent`, full instructions) only for framework prob
 ## 4. Full run
 `python stages/3-copy/octave_copy.py R --client "<client>"`: writes the remaining leads and reuses the approved test emails for free. It refuses to run before the client approved the current version (`--skip-client-approval` only for internal tests).
 Report agent vs fallback counts and Octave credits. Hand off to stage 4 (`cymate-4-campaign`).
+
+## Visual option: Copy Studio
+The same stage as a claude.ai artifact (client + campaign brief in; SHORT vs MEDIUM variants, the why, copy, paste-ready Octave agent instructions and a chat out). Setup and how it works: `stages/3-copy/studio/README.md`.
