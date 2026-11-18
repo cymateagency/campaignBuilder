@@ -332,34 +332,22 @@ tbody tr.click:hover .cname{color:var(--ember)}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const LEADS = __LEADS__;
-const RUN = {
-  client: "Clear-Tech", row: "Juan-Test", campaign: "ColdOutreach_banks_dataleaders_200-2000_us_aiark_nov",
-  group: "G1", offer: "A", framework: "TFKD",
-  spend: { aiark: 50, octave: 55 }, count: 940, pulled: 50,
-};
-const GROUPS = [
-  { id: "G1", name: "Banks hiring data talent", industry: "Banking, lending, payments", titles: "CDO, VP/Head of Data, CTO, CIO", signal: "Data/AI job post, last 90 days", offer: "A · Senior engineers", opener: true },
-  { id: "G2", name: "Retail with a new tech leader", industry: "Retail, consumer goods, food", titles: "CTO, CIO, CDO, Chief Digital", signal: "New tech leader, ≤ 12 months", offer: "A · Senior engineers", opener: true },
-  { id: "G3", name: "Oil & gas after a deal", industry: "Upstream, pipelines, midstream", titles: "Supply chain, logistics, VP Ops", signal: "M&A or consolidation, 6 months", offer: "B · Barrelytics", opener: false },
-  { id: "G4", name: "Media launching AI", industry: "Media, adtech, platforms", titles: "Chief AI Officer, Head of AI, CTO", signal: "AI launch, no data platform", offer: "C · Pengui", opener: false },
-];
-const SAMPLES = [
-  { client: "Clear-Tech", camp: "ColdOutreach_banks_dataleaders_200-2000_us_aiark_nov", stage: 4, status: ["hold", "Awaiting CSM: start in Smartlead"], leads: 22, spend: "50 AI Ark · 110 Octave", real: true, csm: "Juan" },
-  { client: "Sample · Northfield Analytics", camp: "Form_logistics_vpops_50-500_us_aiark_dec", stage: 3, status: ["hold", "Client review · round 2"], leads: 64, spend: "120 AI Ark · 128 Octave", real: false, csm: "Balaaj" },
-  { client: "Sample · Arcwell Health", camp: "ColdOutreach_clinics_owners_10-50_us_aiark_dec", stage: 2, status: ["ember", "Approve the pull (180 credits)"], leads: 0, spend: "0", real: false, csm: "Thomas" },
-  { client: "Sample · Brightline Freight", camp: "Podcast_freight_ceo_20-200_us_aiark_dec", stage: 1, status: ["ember", "Pick group + offer"], leads: 0, spend: "0", real: false, csm: "Juan" },
-];
+/* Preview data (app/preview.sample.json, or a git-ignored app/preview.local.json), injected by app/build.py. */
+const PREVIEW = __PREVIEW__;
+const LEADS = PREVIEW.leads;
+const RUN = { client: PREVIEW.client, campaign: PREVIEW.campaign, count: PREVIEW.count, pulled: PREVIEW.pulled };
+const GROUPS = PREVIEW.groups;
+const SAMPLES = PREVIEW.samples;
 const STAGES = [
   { n: 1, key: "onboarding", name: "Onboarding", gate: "Pick group + offer" },
   { n: 2, key: "list", name: "Lead list", gate: "Approve search + pull" },
   { n: 3, key: "copy", name: "Copy", gate: "CSM, then client approve" },
   { n: 4, key: "campaign", name: "Campaign", gate: "Build draft, then start" },
 ];
-const STATE = { done: { 1: true, 2: true, 3: false, 4: false }, group: "G1", pull: 50, lead: 6, csm: false, sent: false, client: false, round: 1,
+const STATE = { done: { 1: true, 2: true, 3: false, 4: false }, group: "G1", pull: 50, lead: 0, csm: false, sent: false, client: false, round: 1,
   todos: {}, chat: [{ me: false, t: "Copy Studio ready. Ask for a change to the brief, a line, or one lead's email." }] };
-try { const s = JSON.parse(localStorage.getItem("cymate-builder") || "null"); if (s) Object.assign(STATE, s); } catch {}
-function persist() { try { localStorage.setItem("cymate-builder", JSON.stringify(STATE)); } catch {} }
+try { const s = JSON.parse(localStorage.getItem("cymate-builder-v2") || "null"); if (s) Object.assign(STATE, s); } catch {}
+function persist() { try { localStorage.setItem("cymate-builder-v2", JSON.stringify(STATE)); } catch {} }
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -490,16 +478,16 @@ function viewCampaigns() {
   return `<section class="radarhead">
     <div class="lead"><h1>Campaigns<span class="dot">.</span></h1>
       <p class="muted" style="max-width:52ch;font-size:16px">Every campaign moves through four stages. Each one stops where a person decides, so nothing is pulled, written or sent without a yes.</p>
-      <div class="row" style="margin-top:4px"><a class="btn ember" href="#build-1">New campaign <span class="arr">↗</span></a><a class="btn ghost" href="#build-${STATE.done[3] ? 4 : 3}">Continue Clear-Tech</a></div></div>
+      <div class="row" style="margin-top:4px"><a class="btn ember" href="#build-1">New campaign <span class="arr">↗</span></a><a class="btn ghost" href="#build-${STATE.done[3] ? 4 : 3}">Continue ${esc(RUN.client)}</a></div></div>
     ${radar([[6, 60, "Meeting booked"], [62, 80, "Positive reply"], [60, 12, "Client approved"]])}
   </section>
   <div class="grid g4">
     <div class="panel stat"><span class="k">Campaigns in build</span><span class="v num">${active}</span></div>
     <div class="panel stat"><span class="k">Waiting on a person</span><span class="v num">${waiting}</span></div>
-    <div class="panel stat"><span class="k">Leads ready</span><span class="v num">22<small>Clear-Tech</small></span></div>
-    <div class="panel stat"><span class="k">Spend this month</span><span class="v num">160<small>credits</small></span></div>
+    <div class="panel stat"><span class="k">Leads ready</span><span class="v num">${LEADS.length}<small>${esc(RUN.client)}</small></span></div>
+    <div class="panel stat"><span class="k">Spend this month</span><span class="v num">${PREVIEW.spend_month}<small>credits</small></span></div>
   </div>
-  <p class="sample">Preview. Clear-Tech is the real test run; rows marked "Sample" show the other stages.</p>
+  <p class="sample">Preview with sample data. Open it in the Claude desktop app with the bridge set up to work on real clients.</p>
   <div class="tbl"><table>
     <thead><tr><th>Client · campaign</th><th>Stage</th><th>Next gate</th><th class="num">Leads</th><th>Spend</th><th>CSM</th></tr></thead>
     <tbody>${SAMPLES.map(s => `<tr class="click" data-go="#build-${s.stage}">
@@ -515,7 +503,7 @@ function stageRail(cur) {
 }
 function head(n, title, lede, hand) {
   return `<div class="row" style="justify-content:space-between;align-items:flex-end">
-    <div class="stack" style="gap:12px"><span class="eyebrow">Clear-Tech · G1 Banks · <span class="mono">${esc(RUN.campaign)}</span></span><h1>${title}<span class="dot">.</span></h1>
+    <div class="stack" style="gap:12px"><span class="eyebrow">${esc(LIVE.client || RUN.client)} · ${esc(PREVIEW.group_label)} · <span class="mono">${esc(RUN.campaign)}</span></span><h1>${title}<span class="dot">.</span></h1>
     <p class="muted" style="max-width:62ch;font-size:16px">${lede}</p></div></div>${stageRail(n)}`;
 }
 function gate(q, sub, btn, next, done) {
@@ -526,10 +514,10 @@ function gate(q, sub, btn, next, done) {
 function liveBanner() {
   if (LIVE.bridge === true) return "";
   return `<div class="banner"><span class="led"></span><div><b>${LIVE.bridge === null ? "Connecting to the bridge…" : "Preview data"}</b>
-    <span class="hint">${LIVE.bridge === null ? "" : "The bridge isn't connected, so this shows the Clear-Tech test run. Open the page in the Claude desktop app with the cymate_copy bridge set up (stages/3-copy/studio/README.md) to work on real clients."}</span></div></div>`;
+    <span class="hint">${LIVE.bridge === null ? "" : "The bridge isn't connected, so this shows sample data. Open the page in the Claude desktop app with the cymate_copy bridge set up (stages/3-copy/studio/README.md) to work on real clients."}</span></div></div>`;
 }
 function groupsPanel() {
-  return `<div class="panel ${STATE.done[1] ? "" : "hot"}"><div class="ph"><div class="t"><span class="eyebrow">PMF matrix</span><h2>Pick the group to run</h2></div><span class="hint">${LIVE.bridge ? "From the Clear-Tech matrix for now; matrix upload comes next." : "Openers are the tests the matrix runs first."}</span></div>
+  return `<div class="panel ${STATE.done[1] ? "" : "hot"}"><div class="ph"><div class="t"><span class="eyebrow">PMF matrix</span><h2>Pick the group to run</h2></div><span class="hint">${LIVE.bridge ? "Sample groups for now; matrix upload comes next." : "Openers are the tests the matrix runs first."}</span></div>
     <div class="groups">${GROUPS.map(x => `<button class="grp" type="button" data-group="${x.id}" aria-pressed="${x.id === STATE.group}">
       <div class="row" style="justify-content:space-between"><span class="gid">${x.id}</span>${x.opener ? '<span class="pill ember">Opener</span>' : '<span class="pill plain">Later</span>'}</div>
       <h3>${esc(x.name)}</h3><dl><dt>Industry</dt><dd>${esc(x.industry)}</dd><dt>Titles</dt><dd>${esc(x.titles)}</dd><dt>Signal</dt><dd>${esc(x.signal)}</dd><dt>Offer</dt><dd>${esc(x.offer)}</dd></dl></button>`).join("")}</div>
@@ -566,21 +554,17 @@ function viewStage1() {
 function previewStage1(g) {
   return `
   <div class="split">
-    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Client</span><h2>Clear-Tech</h2></div><span class="pill go">Found in Airtable</span></div>
-      <div class="grid g2"><div class="field"><label for="client">Airtable client</label><input class="input" id="client" value="Juan-Test (Clear-Tech test)"></div>
+    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Client</span><h2>${esc(RUN.client)}</h2></div><span class="pill plain">Sample</span></div>
+      <div class="grid g2"><div class="field"><label for="client">Airtable client</label><input class="input" id="client" value="${esc(PREVIEW.airtable_row)}"></div>
         <div class="field"><label for="cname">Campaign name</label><input class="input mono" id="cname" value="${esc(RUN.campaign)}"></div></div>
       <div class="inputs">
-        <div class="src"><span class="ic on">PDF</span><div class="meta"><b>clear-tech.pdf</b><span class="sub">Onboarding form · 17 pages</span></div></div>
-        <div class="src"><span class="ic on">PDF</span><div class="meta"><b>Clear-Tech PMF Matrix.pdf</b><span class="sub">4 groups · 3 offers</span></div></div>
-        <div class="src"><span class="ic">REC</span><div class="meta"><b>Onboarding call</b><span class="sub">Add a Fathom link</span></div></div>
+        ${PREVIEW.inputs.map(x => `<div class="src"><span class="ic ${x.on ? "on" : ""}">${esc(x.ic)}</span><div class="meta"><b>${esc(x.name)}</b><span class="sub">${esc(x.sub)}</span></div></div>`).join("")}
         <label class="drop" for="file">+ Drop files or <u>browse</u><input id="file" type="file" hidden multiple></label>
       </div>
       <div class="field"><label for="ctx">Or type the context</label><textarea class="input" id="ctx" placeholder="For clients without a PMF matrix: who they sell to, the offer, proof, and what to avoid."></textarea></div>
     </div>
-    <div class="panel"><div class="t stack" style="gap:6px"><span class="eyebrow">Client context</span><h3>Data &amp; AI consultancy, Denver</h3></div>
-      <dl class="kv"><dt>Offers</dt><dd>Senior engineers in weeks · Barrelytics · Pengui</dd><dt>Buyers</dt><dd>Data, tech and AI leaders, director and above</dd>
-        <dt>Size</dt><dd>200 to 2,000 employees, $20M+</dd><dt>Region</dt><dd>US</dd><dt>Proof</dt><dd>LG Ad Solutions (29+ agents in production), Pluspetrol</dd>
-        <dt>Not approved</dt><dd><span class="pill hold">Grupo Bimbo case study</span></dd><dt>Excluded</dt><dd>IT services, consulting, software, government</dd></dl>
+    <div class="panel"><div class="t stack" style="gap:6px"><span class="eyebrow">Client context</span><h3>${esc(PREVIEW.context_title)}</h3></div>
+      <dl class="kv">${PREVIEW.context.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${k === "Not approved" ? `<span class="pill hold">${esc(v)}</span>` : esc(v)}</dd>`).join("")}</dl>
     </div>
   </div>
   ${groupsPanel()}
@@ -590,18 +574,14 @@ function previewStage1(g) {
 function viewStage2() {
   const pull = STATE.pull, usable = Math.round(pull * 0.44);
   const chips = (a, x) => a.map(v => `<span class="chip ${x || ""}">${esc(v)}</span>`).join("");
-  const f = [["Titles · word match", chips(["Chief Data Officer", "Chief Data & Analytics Officer", "VP of Data", "Head of Data", "Head of BI", "Head of Analytics", "Director of Data Engineering", "CTO", "CIO", "VP of Technology"])],
-    ["Not these titles", chips(["Assistant", "Intern", "Analyst", "Advisor", "Former", "Board", "Recruiter", "Consultant", "Investment"], "x")],
-    ["Seniority", chips(["C-level", "VP", "Director", "Head"])], ["Location", chips(["HQ in the US", "Contact in the US"])],
-    ["Company size", chips(["201 to 500", "501 to 1,000", "1,001 to 2,000"])], ["Revenue", chips(["$25M+"])],
-    ["Industries", chips(["Banking", "Financial Services", "Capital Markets", "Investment Banking", "Lending", "Credit", "Mortgage"])],
-    ["Excluded", chips(["Government", "Non-profit", "Education", "Proofpoint + Mimecast gateways"], "x")]];
-  const bar = (k, n, cls) => `<div class="fbar"><span>${k}</span><span class="track"><span class="fill ${cls || ""}" style="width:${Math.max(2, n / 50 * 100)}%"></span></span><span class="c">${n}</span></div>`;
+  const f = PREVIEW.filters.map(([k, v, x]) => [esc(k), chips(v, x ? "x" : "")]);
+  const top = PREVIEW.funnel[0][1] || 1;
+  const bar = (k, n, cls) => `<div class="fbar"><span>${esc(k)}</span><span class="track"><span class="fill ${cls || ""}" style="width:${Math.max(2, n / top * 100)}%"></span></span><span class="c">${n}</span></div>`;
   return head(2, "Lead list", "The AI Ark search for the chosen group. Check it in the AI Ark app, approve the pull size, and the list comes back cleaned and verified.", "step two") + `
   <div class="split">
-    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Search · G1 Banks</span><h2>Who we pull</h2></div><button class="btn sm" data-act="copypayload">Copy in-app payload</button></div>
+    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Search · ${esc(PREVIEW.group_label)}</span><h2>Who we pull</h2></div><button class="btn sm" data-act="copypayload">Copy in-app payload</button></div>
       <div class="filters">${f.map(([k, v]) => `<span class="k">${k}</span><div class="chips">${v}</div>`).join("")}</div>
-      <div class="payload" id="payload">{"include_latest_title":["Chief Data Officer","Chief Data and Analytics Officer","VP of Data","Head of Data","Head of BI","Head of Analytics","Director of Data Engineering","CTO","CIO","VP of Technology"],"exact_match":{"include_latest_title":"WORD"},"include_seniority":["C_SUITE","VP","DIRECTOR","HEAD"],"employee_size_predefined":["201-500","501-1000","1001-2000"],"annual_revenue_predefined":["$25M-$50M","$50M-$100M","$100M-$500M","$500M-$1B","$1B-$5B","$5B-$10B","$10B+"],"include_industry":["Banking","Financial Services","Capital Markets","Investment Banking","Investment Management","Commercial Lending","Consumer Lending","Lending","Credit","Credit Cards","Mortgage"]}</div>
+      <div class="payload" id="payload">${esc(JSON.stringify(PREVIEW.payload))}</div>
       <p class="hint">In AI Ark: People Search → Search Payload → In-App Payload → paste → Apply Search. If you change filters, paste the API payload back here.</p>
     </div>
     <div class="stack">
@@ -610,17 +590,17 @@ function viewStage2() {
         <dl class="kv"><dt>AI Ark cost</dt><dd class="num">≈ ${pull} credits</dd><dt>Usable after cleaning</dt><dd class="num">≈ ${usable} leads (35 to 45%)</dd></dl>
       </div>
       <div class="panel"><span class="eyebrow">Last pull · ${RUN.pulled} contacts</span>
-        <div class="funnel">${bar("Pulled", 50)}${bar("Off-target title", 10, "out")}${bar("Off-target industry", 8, "out")}${bar("Held: gateway", 4, "held")}${bar("Kept", 28, "keep")}${bar("Verified email", 22, "keep")}</div>
-        <p class="hint">Email waterfall skipped: 6 leads without an email were left out.</p></div>
+        <div class="funnel">${PREVIEW.funnel.map(([k, n, c]) => bar(k, n, c)).join("")}</div>
+        <p class="hint">${esc(PREVIEW.funnel_note)}</p></div>
     </div>
   </div>
-  <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Verified leads</span><h2>22 ready for copy</h2></div><span class="pill go">AI Ark verified</span></div>
+  <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Verified leads</span><h2>${LEADS.length} ready for copy</h2></div><span class="pill go">AI Ark verified</span></div>
     <div class="tbl"><table><thead><tr><th>Company</th><th>Title</th><th>Industry</th><th class="num">Staff</th></tr></thead>
       <tbody>${LEADS.map(l => `<tr><td class="cname">${esc(l.company)}</td><td>${esc(l.title)}</td><td class="sub">${esc(l.industry)}</td><td class="num">${l.staff ?? "–"}</td></tr>`).join("")}</tbody></table></div></div>
   ${gate(`Pull ${pull} contacts for about ${pull} AI Ark credits?`, "Nothing is spent before this yes.", `<button class="btn ember" data-act="approve2">Approve the pull <span class="arr">→</span></button>`, "#build-3", STATE.done[2])}`;
 }
 
-function sig() { return "Best regards,\n<sender first name>\n<title>\nclear-tech․com"; }
+function sig() { return `Best regards,\n<sender first name>\n<title>\n${PREVIEW.website}`; }
 function leadKind(x) { return x.src !== "agent" ? "fallback" : (x.qa && x.qa.length ? "check" : "agent"); }
 function viewStage3() {
   const filt = STATE.filter || "all";
@@ -649,8 +629,8 @@ function viewStage3() {
   </section>
 
   <section class="reader">
-    <div class="ph"><div class="t"><h2>Read before you approve</h2><span class="hint">${agent} personalized · ${fb} fallback · ${read.size} of 22 read</span></div>
-      <div class="tabs" role="group" aria-label="Filter emails">${tab("all", "All", 22)}${tab("agent", "Personalized", count("agent"))}${count("check") ? tab("check", "Check", count("check")) : ""}${tab("fallback", "Fallback", fb)}</div></div>
+    <div class="ph"><div class="t"><h2>Read before you approve</h2><span class="hint">${agent} personalized · ${fb} fallback · ${read.size} of ${LEADS.length} read</span></div>
+      <div class="tabs" role="group" aria-label="Filter emails">${tab("all", "All", LEADS.length)}${tab("agent", "Personalized", count("agent"))}${count("check") ? tab("check", "Check", count("check")) : ""}${tab("fallback", "Fallback", fb)}</div></div>
     <div class="readgrid">
       <div class="leadlist" role="list">${shown.map(([x, i]) => `<button class="lead-i" role="listitem" data-lead="${i}" aria-current="${i === STATE.lead}">
         <b>${esc(x.company)}</b>${read.has(i) && i !== STATE.lead ? '<span class="seen" title="Read">✓</span>' : "<span></span>"}<span class="sub">${esc(x.first)} · ${esc(x.title)}</span></button>`).join("")}</div>
@@ -666,19 +646,14 @@ function viewStage3() {
     </div>
   </section>
 
-  <details class="fold"><summary><span><b>Framework · TFKD</b><span class="hint">Think, Feel, Know, Do. Picked because the buyer may not connect the open seat to the stalled roadmap.</span></span><span class="hint">Why</span></summary>
-    <div class="considered"><div><span class="pill stop">Not used</span><span>Hiring signal copy: the pull has no job-post signal</span></div><div><span class="pill stop">Not used</span><span>Talking To Other Folks: no banking case study</span></div></div></details>
+  <details class="fold"><summary><span><b>Framework · ${esc(PREVIEW.framework)}</b><span class="hint">${esc(PREVIEW.framework_why)}</span></span><span class="hint">Why</span></summary>
+    <div class="considered">${PREVIEW.not_used.map(t => `<div><span class="pill stop">Not used</span><span>${esc(t)}</span></div>`).join("")}</div></details>
   <details class="fold"><summary><span><b>Campaign brief</b><span class="hint">The only source of truth. The agent can't use anything outside it.</span></span><span class="hint">Open</span></summary>
-    <dl class="brief"><dt>Client</dt><dd>Clear-Tech, a data and AI consultancy in Denver with a senior engineering team in Argentina.</dd>
-      <dt>Offer</dt><dd>Senior data and AI engineers who join the reader's team in 1 to 2 weeks.</dd>
-      <dt>Mechanism</dt><dd>Senior only (10 to 20+ years), US time zones, nearshore cost. Diagnosis first.</dd>
-      <dt>Proof</dt><dd>LG Ad Solutions: a core team of 3 to 8 put 29+ AI agents into production.</dd>
-      <dt>Pain</dt><dd>Senior data roles stay open for months while the roadmap waits. Said as common, never as a fact about the reader.</dd>
-      <dt>Not allowed</dt><dd>Grupo Bimbo · prices · guarantees · other timelines</dd><dt>Soft CTA</dt><dd>Open to learning more?</dd></dl>
+    <dl class="brief">${PREVIEW.brief.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
     <div class="row"><button class="btn sm" data-act="editbrief">Edit brief</button><span class="hint">Editing the brief starts a new test of 8 emails.</span></div></details>
   <details class="fold"><summary><span><b>Ask Copy Studio</b><span class="hint">Change a line, the tone, or one lead's email in plain words.</span></span><span class="hint">Open</span></summary>
     <div class="chat" id="chat">${STATE.chat.map(m => `<div class="msg ${m.me ? "me" : ""}">${esc(m.t)}</div>`).join("")}</div>
-    <form class="row" id="chatform"><input class="input" id="chatin" placeholder='e.g. "Shorten line 3 for the bank CIOs"' style="flex:1;min-width:0"><button class="btn sm ember" type="submit">Send</button></form></details>`;
+    <form class="row" id="chatform"><input class="input" id="chatin" placeholder="${esc(PREVIEW.chat_placeholder)}" style="flex:1;min-width:0"><button class="btn sm ember" type="submit">Send</button></form></details>`;
 }
 
 function viewStage4() {
@@ -686,14 +661,14 @@ function viewStage4() {
   const WARN = ["Fewer than 2 spintax blocks per email", "Warmup status: check in Smartlead"];
   const TODO = ["Upload client blocklist to the global block list", "Turn on 'restart AI-categorised OOO' (campaign + subsequence)", "Connect the reply-agent webhook", "Send a test email to yourself", "Peer review ticket: Campaign Setup Review"];
   const doneTodos = TODO.filter((_, i) => STATE.todos[i]).length;
-  const l = LEADS[6];
+  const l = LEADS[Math.min(6, LEADS.length - 1)];
   return head(4, "Campaign", "The approved copy goes to the campaign builder, which sets every SOP setting, creates the goal subsequence for the reply agent and checks the result. It stays a draft until you start it.", "last step") + `
   <div class="split">
     <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Smartlead plan</span><h2>Draft campaign</h2></div><span class="pill hold">Not built</span></div>
       <dl class="kv"><dt>Name</dt><dd class="mono">${esc(RUN.campaign)}</dd><dt>Type</dt><dd>ColdOutreach · reply agent</dd>
         <dt>Mailboxes</dt><dd><input class="input" id="mb" placeholder="Live campaign ID to copy mailboxes from" style="max-width:340px"></dd>
         <dt>Subsequence</dt><dd><input class="input" id="ss" placeholder="Existing ColdOutreach_Subsequence ID" style="max-width:340px"></dd>
-        <dt>Sequence</dt><dd>Email 1 per lead + follow ups at day 3 and day 7, same thread</dd><dt>Schedule</dt><dd>Next business day · 08:00 to 16:00 LA · 444 per day</dd><dt>Leads</dt><dd class="num">22 ready</dd></dl>
+        <dt>Sequence</dt><dd>Email 1 per lead + follow ups at day 3 and day 7, same thread</dd><dt>Schedule</dt><dd>Next business day · 08:00 to 16:00 LA · 444 per day</dd><dt>Leads</dt><dd class="num">${LEADS.length} ready</dd></dl>
       <span class="eyebrow">Email 1 preview</span>
       <div class="mail"><div class="mh"><span>To</span><span>${esc(l.first)}, ${esc(l.company)}</span><span>Subject</span><span>${esc(l.subject)}</span></div><div class="mb">${esc(l.email)}<div class="sig">${esc(sig())}</div></div></div>
     </div>

@@ -1,0 +1,71 @@
+{
+  "_note": "Fictional preview data shown when the bridge isn't connected. Put real-run preview data in app/preview.local.json (git-ignored), never here.",
+  "client": "Northfield Analytics",
+  "airtable_row": "Sample client",
+  "website": "northfield․example",
+  "campaign": "ColdOutreach_logistics_vpops_200-2000_us_aiark_dec",
+  "group_label": "G1 Freight",
+  "count": 860,
+  "pulled": 50,
+  "spend_month": 160,
+  "groups": [
+    {"id": "G1", "name": "Freight firms adding lanes", "industry": "Trucking, 3PL, freight brokerage", "titles": "VP Operations, COO, Head of Logistics", "signal": "New lanes or depots, last 90 days", "offer": "A · Route analytics", "opener": true},
+    {"id": "G2", "name": "Distributors with a new ops leader", "industry": "Wholesale, distribution", "titles": "COO, VP Supply Chain", "signal": "New ops leader, ≤ 12 months", "offer": "A · Route analytics", "opener": true},
+    {"id": "G3", "name": "Retailers after a warehouse move", "industry": "Retail, e-commerce", "titles": "Director of Fulfillment, VP Ops", "signal": "New warehouse, 6 months", "offer": "B · Dock scheduling", "opener": false},
+    {"id": "G4", "name": "Manufacturers cutting freight cost", "industry": "Manufacturing", "titles": "Head of Procurement, CFO", "signal": "Cost program announced", "offer": "C · Freight audit", "opener": false}
+  ],
+  "samples": [
+    {"client": "Sample · Northfield Analytics", "camp": "ColdOutreach_logistics_vpops_200-2000_us_aiark_dec", "stage": 3, "status": ["hold", "Client review · round 2"], "leads": 6, "spend": "50 AI Ark · 12 Octave", "csm": "Balaaj"},
+    {"client": "Sample · Arcwell Health", "camp": "ColdOutreach_clinics_owners_10-50_us_aiark_dec", "stage": 2, "status": ["ember", "Approve the pull (180 credits)"], "leads": 0, "spend": "0", "csm": "Thomas"},
+    {"client": "Sample · Brightline Freight", "camp": "Podcast_freight_ceo_20-200_us_aiark_dec", "stage": 1, "status": ["ember", "Pick group + offer"], "leads": 0, "spend": "0", "csm": "Juan"}
+  ],
+  "inputs": [
+    {"ic": "PDF", "on": true, "name": "Onboarding form.pdf", "sub": "Onboarding form · 12 pages"},
+    {"ic": "PDF", "on": true, "name": "PMF Matrix.pdf", "sub": "4 groups · 3 offers"},
+    {"ic": "REC", "on": false, "name": "Onboarding call", "sub": "Add a Fathom link"}
+  ],
+  "context_title": "Logistics analytics software, Chicago",
+  "context": [
+    ["Offers", "Route analytics · Dock scheduling · Freight audit"],
+    ["Buyers", "Operations and logistics leaders, director and above"],
+    ["Size", "200 to 2,000 employees, $20M+"],
+    ["Region", "US"],
+    ["Proof", "A regional carrier cut empty miles by 18% in one quarter"],
+    ["Not approved", "Named customer logos"],
+    ["Excluded", "Software, consulting, government"]
+  ],
+  "filters": [
+    ["Titles · word match", ["VP Operations", "COO", "Head of Logistics", "Director of Transportation", "VP Supply Chain"], false],
+    ["Not these titles", ["Assistant", "Intern", "Analyst", "Former", "Recruiter", "Consultant"], true],
+    ["Seniority", ["C-level", "VP", "Director", "Head"], false],
+    ["Location", ["HQ in the US", "Contact in the US"], false],
+    ["Company size", ["201 to 500", "501 to 1,000", "1,001 to 2,000"], false],
+    ["Revenue", ["$20M+"], false],
+    ["Industries", ["Truck Transportation", "Freight", "Logistics", "Warehousing"], false],
+    ["Excluded", ["Government", "Non-profit", "Software"], true]
+  ],
+  "payload": {"include_latest_title": ["VP Operations", "COO", "Head of Logistics", "Director of Transportation", "VP Supply Chain"], "exact_match": {"include_latest_title": "WORD"}, "include_seniority": ["C_SUITE", "VP", "DIRECTOR", "HEAD"], "employee_size_predefined": ["201-500", "501-1000", "1001-2000"], "include_industry": ["Truck Transportation", "Freight", "Logistics", "Warehousing"]},
+  "funnel": [["Pulled", 50, ""], ["Off-target title", 12, "out"], ["Off-target industry", 9, "out"], ["Held: gateway", 3, "held"], ["Kept", 26, "keep"], ["Verified email", 6, "keep"]],
+  "funnel_note": "Sample numbers. The preview shows 6 of the verified leads.",
+  "framework": "TFKD",
+  "framework_why": "Think, Feel, Know, Do. Picked because the buyer may not connect new lanes to rising empty miles.",
+  "not_used": ["Hiring signal copy: the pull has no job-post signal", "Talking To Other Folks: no case study from this niche yet"],
+  "brief": [
+    ["Client", "Northfield Analytics, logistics analytics software in Chicago."],
+    ["Offer", "Route analytics that shows which lanes lose money, live in 2 weeks."],
+    ["Mechanism", "Reads the TMS data the team already has. No new hardware."],
+    ["Proof", "A regional carrier cut empty miles by 18% in one quarter."],
+    ["Pain", "New lanes add empty miles nobody sees until the quarter closes. Said as common, never as a fact about the reader."],
+    ["Not allowed", "Customer names · prices · guarantees"],
+    ["Soft CTA", "Open to learning more?"]
+  ],
+  "chat_placeholder": "e.g. \"Shorten line 3 for the COOs\"",
+  "leads": [
+    {"first": "Dana", "title": "VP Operations", "company": "Sample Freight Co", "industry": "trucking", "staff": 640, "src": "agent", "qa": [], "subject": "new lanes", "fact": "Sample Freight Co: opened two new lanes into Texas (sample fact)", "url": "", "email": "Hey Dana, since you just opened two lanes into Texas, are empty miles on the new routes showing up before the quarter closes?\n\nNew lanes usually add empty miles nobody sees until the numbers come in.\n\nNorthfield shows which lanes lose money from the TMS data you already have, live in 2 weeks.\n\nOpen to learning more?"},
+    {"first": "Marcus", "title": "COO", "company": "Example Logistics", "industry": "3pl", "staff": 1180, "src": "agent", "qa": [], "subject": "lane margins", "fact": "Example Logistics: added a depot in Ohio (sample fact)", "url": "", "email": "Hey Marcus, since you added the Ohio depot, is it clear yet which lanes out of it make money?\n\nNew depots tend to hide losing lanes for a quarter or two.\n\nNorthfield reads your TMS data and shows lane margins in 2 weeks, with no new hardware.\n\nOpen to learning more?"},
+    {"first": "Priya", "title": "Head of Logistics", "company": "Demo Distribution", "industry": "wholesale", "staff": 410, "src": "agent", "qa": [], "subject": "empty miles", "fact": "Demo Distribution: named a new head of logistics (sample fact)", "url": "", "email": "Hey Priya, congrats on the new role. Are empty miles one of the numbers you're looking at first?\n\nMost new ops leaders find them only after the first quarter close.\n\nNorthfield shows them lane by lane from the data you already have, live in 2 weeks.\n\nOpen to learning more?"},
+    {"first": "Tom", "title": "Director of Transportation", "company": "Placeholder Carriers", "industry": "trucking", "staff": 520, "src": "agent", "qa": ["check: fact is older than 6 months"], "subject": "new lanes", "fact": "Placeholder Carriers: expanded its fleet (sample fact)", "url": "", "email": "Hey Tom, since you expanded the fleet, are the new trucks running full both ways?\n\nBigger fleets often add empty miles nobody sees until the quarter closes.\n\nNorthfield shows which lanes lose money from your TMS data, live in 2 weeks.\n\nOpen to learning more?"},
+    {"first": "Elena", "title": "VP Supply Chain", "company": "Mock Wholesale", "industry": "distribution", "staff": 870, "src": "fallback", "qa": [], "subject": "lane margins", "fact": "", "url": "", "email": "Hey Elena, I'm curious if empty miles on your busiest lanes are visible before the quarter closes?\n\nThey usually show up only when the numbers come in.\n\nNorthfield shows lane margins from the TMS data you already have, live in 2 weeks.\n\nOpen to learning more?"},
+    {"first": "Sam", "title": "COO", "company": "Test Haulage", "industry": "freight", "staff": 300, "src": "agent", "qa": [], "subject": "new lanes", "fact": "Test Haulage: started a cross-border lane to Mexico (sample fact)", "url": "", "email": "Hey Sam, since you started the cross-border lane, are the return legs coming back full?\n\nNew lanes usually add empty miles nobody sees until the quarter closes.\n\nNorthfield shows which lanes lose money from your TMS data, live in 2 weeks.\n\nOpen to learning more?"}
+  ]
+}

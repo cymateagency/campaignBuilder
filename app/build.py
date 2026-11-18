@@ -5,9 +5,10 @@ claude.ai artifact.
 
 - Satoshi (cymate.io's body face, free from Fontshare) is downloaded and embedded: artifacts can only load Google Fonts.
   The font files are not kept in the repo.
-- Preview data: the leads and emails of a local run folder (default runs/juan-test/clear-tech-g1-offer-a). They are real
-  people's details, so app/dist/ is git-ignored and nothing from runs/ ever reaches the repo. Without a run folder the
-  preview has no leads.
+- Preview data (what the page shows when the bridge isn't connected) comes from app/preview.sample.json, a fictional
+  client. app/preview.local.json, if present, overrides any of its keys; it is git-ignored, so real client details stay
+  on this laptop. With a run_dir, that run's leads and emails (copy.jsonl) replace the sample leads; they are real
+  people's details, so only build that way for a page you keep private. app/dist/ is git-ignored.
 Publish the result with the Artifact tool and these capabilities:
   {"mcp": {"servers": [{"server": "host:cymate_copy", "tools": [<the bridge tools the page calls>]}]}, "sample": {}}
 """
@@ -16,6 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC, OUT = ROOT / "app" / "builder.src.html", ROOT / "app" / "dist" / "cymate-campaign-builder.html"
+SAMPLE, LOCAL = ROOT / "app" / "preview.sample.json", ROOT / "app" / "preview.local.json"
 CACHE = ROOT / ".cache" / "fonts"
 TOOLS = ["list_clients", "octave_setup_status", "onboarding_context", "octave_copy_agents", "octave_seed_library"]
 
@@ -37,11 +39,10 @@ def satoshi():
     return out
 
 
-def leads(run_dir):
+def run_leads(run_dir):
     p = Path(run_dir) / "copy.jsonl"
     if not p.exists():
-        print(f"no {p}: the preview will have no leads")
-        return []
+        sys.exit(f"no {p}")
     rows = []
     for line in p.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -54,10 +55,22 @@ def leads(run_dir):
     return rows
 
 
+def preview(run_dir):
+    data = json.loads(SAMPLE.read_text(encoding="utf-8"))
+    if LOCAL.exists():
+        data.update(json.loads(LOCAL.read_text(encoding="utf-8")))
+        print(f"preview: {SAMPLE.name} + {LOCAL.name}")
+    if run_dir:
+        data["leads"] = run_leads(run_dir)
+        print(f"preview: {len(data['leads'])} leads from {run_dir}")
+    data.pop("_note", None)
+    return data
+
+
 def main():
-    run = sys.argv[1] if len(sys.argv) > 1 else ROOT / "runs" / "juan-test" / "clear-tech-g1-offer-a"
     s = SRC.read_text(encoding="utf-8")
-    s = s.replace("__LEADS__", json.dumps(leads(run), ensure_ascii=False).replace("</", "<" + "\\/"))
+    data = preview(sys.argv[1] if len(sys.argv) > 1 else None)
+    s = s.replace("__PREVIEW__", json.dumps(data, ensure_ascii=False).replace("</", "<" + "\\/"))
     for w, b in satoshi().items():
         s = s.replace(f"__SAT{w}__", b)
     if "<meta charset" not in s:

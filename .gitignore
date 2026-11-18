@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 .env
 app/dist/
+app/preview.local.json

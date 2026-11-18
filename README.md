@@ -4,12 +4,12 @@ From client onboarding to a draft Smartlead campaign, without Clay, in four stag
 
 | Stage | What it does | Ask Claude |
 |---|---|---|
-| 1 Onboarding | Reads the onboarding form, onboarding call, PMF matrix, or a typed description; writes the client context and ICP brief; the CSM picks the group and offer | "onboard Clear-Tech" |
-| 2 Lead list | Builds the AI Ark search (reviewed in the AI Ark app), pulls, cleans (dedupe, gateways, off-target), finds and verifies emails | "build the list for Clear-Tech G1" |
-| 3 Copy | Picks the framework from the context, writes the brief, generates each lead's email with the Octave template agents, checks it, CSM approves 5+ examples, client approves (feedback rounds) | "write the copy for Clear-Tech" |
+| 1 Onboarding | Reads the onboarding form, onboarding call, PMF matrix, or a typed description; writes the client context and ICP brief; the CSM picks the group and offer | "onboard Acme" |
+| 2 Lead list | Builds the AI Ark search (reviewed in the AI Ark app), pulls, cleans (dedupe, gateways, off-target), finds and verifies emails | "build the list for Acme G1" |
+| 3 Copy | Picks the framework from the context, writes the brief, generates each lead's email with the Octave template agents, checks it, CSM approves 5+ examples, client approves (feedback rounds) | "write the copy for Acme" |
 | 4 Campaign | Exports the approved copy for the `campaign-builder` skill (Cymate's Smartlead SOP builder, by Jairo), which builds the DRAFT with its goal subsequence and runs the SOP checklist | "build the Smartlead campaign" |
 
-Or "build a campaign for Clear-Tech" to go through all four. Claude stops at every gate.
+Or "build a campaign for Acme" to go through all four. Claude stops at every gate.
 
 ## Setup (once per machine)
 
