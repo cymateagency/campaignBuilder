@@ -317,14 +317,12 @@ POOL = ThreadPoolExecutor(8)
 
 def _agent_job(jid, client, framework, lead, brief, segment, extra):
     try:
-        agent = CONFIG["octave_template_agents"].get(framework)
-        if not agent:
-            raise ToolError(f"no template agent for framework '{framework}' in config.json")
+        agent, run_key, _where = agent_for(client, framework)  # the client's own copy when its workspace has one
         ctx = brief + (f"\n\nSegment: {segment}" if segment else "") + (f"\n\nEXTRA INSTRUCTIONS FOR THIS RUN: {extra}" if extra else "")
         body = {"agentOId": agent, "firstName": lead.get("first"), "lastName": lead.get("last"), "jobTitle": lead.get("title"),
                 "linkedInProfile": lead.get("linkedin"), "companyName": lead.get("company"), "companyDomain": lead.get("domain"),
                 "email": lead.get("email"), "outputFormat": "JSON", "runtimeContext": ctx}
-        st, js = http("POST", OCTAVE_RUN, body, {"api_key": agent_key(client)[0]}, timeout=300)
+        st, js = http("POST", OCTAVE_RUN, body, {"api_key": run_key}, timeout=300)
         if st != 200 or not isinstance(js, dict):
             raise ToolError(f"Octave returned {st}: {str(js)[:300]}")
         data = js.get("data") or {}
@@ -522,6 +520,140 @@ def copy_rules(_):
             "template_agents": CONFIG["octave_template_agents"]}
 
 
+# ---------- Octave: the client's own workspace (stage 1 setup) ----------
+# The CSM creates the client's workspace in Octave and pastes its API key + MCP URL into the client's Airtable row.
+# Then the builder copies the 5 Cymate template agents into it and seeds its library as suggestions for the CSM.
+
+TEMPLATE_PREFIX = "Cymate Template - "
+FW_NAMES = {"TFKD": "TFKD", "STANDARD_GO_TO": "Standard Go-To", "TWO_SENTENCE_PAIN": "2 Sentence Pain Focus",
+            "POKE_THE_BEAR": "Poke The Bear", "TALKING_TO_OTHER_FOLKS": "Talking To Other Folks"}
+LIB_COUNT_TYPES = ["product", "service", "persona", "segment", "proof_point", "competitor"]
+_AGENTS_CACHE = {}  # client -> (time, {framework: oid})
+
+
+def _own_workspace(client):
+    """(key, url, workspace_id, separate): separate is True only for a workspace other than Cymate's."""
+    key, url, ws = _client_octave(client)
+    return key, url, ws, bool(key and url and ws and ws != CONFIG["octave_workspace"])
+
+
+def _client_agents(client, key, url, fresh=False):
+    """{framework: agent oid} of the Cymate template agents that exist in the client's own workspace."""
+    hit = _AGENTS_CACHE.get(client)
+    if hit and not fresh and time.time() - hit[0] < 600:
+        return hit[1]
+    js = octave_mcp(url, key, "list_agents", {"type": "CONTENT", "query": "Cymate Template", "limit": 50})
+    rows = (js.get("agents") if isinstance(js, dict) else None) or []
+    found = {}
+    for fw, label in FW_NAMES.items():
+        for r in rows:
+            name = str(r.get("name") or "")
+            if name.startswith(TEMPLATE_PREFIX) and name[len(TEMPLATE_PREFIX):].startswith(label):
+                found[fw] = r.get("oId")
+                break
+    _AGENTS_CACHE[client] = (time.time(), found)
+    return found
+
+
+def agent_for(client, framework):
+    """(agent oid, key, where) for one run: the client's own copy of the template when its workspace has one,
+    else the Cymate template agent with the Cymate-workspace key."""
+    key, url, _, separate = _own_workspace(client)
+    if separate:
+        own = _client_agents(client, key, url).get(framework)
+        if own:
+            return own, key, "client workspace"
+    oid = CONFIG["octave_template_agents"].get(framework)
+    if not oid:
+        raise ToolError(f"no template agent for framework '{framework}' in config.json")
+    return oid, agent_key(client)[0], "Cymate workspace"
+
+
+def octave_setup_status(args):
+    """Is the client's own Octave workspace ready: keys in Airtable, reachable, the 5 agents, a library."""
+    client = (args.get("client") or "").strip()
+    if not client:
+        raise ToolError("client is required")
+    key, url, ws, separate = _own_workspace(client)
+    out = {"client": client, "airtable": {"octave_key": bool(key), "octave_mcp_url": bool(url)}, "workspace": ws,
+           "separate_workspace": separate, "reachable": False, "agents": {fw: None for fw in FW_NAMES}, "library": {}}
+    if not key or not url:
+        out["next"] = "Create the client's workspace in Octave, then paste its API key and MCP URL into the client's Airtable row."
+        return out
+    if not separate:
+        out["next"] = "This client's Octave key points at the shared Cymate workspace. Create the client's own workspace in Octave and update its Airtable row."
+        return out
+    try:
+        out["agents"].update(_client_agents(client, key, url, fresh=True))
+        out["reachable"] = True
+        for t in LIB_COUNT_TYPES:
+            js = octave_mcp(url, key, "list_entities", {"entityType": t, "limit": 50})
+            rows = (js.get("entities") if isinstance(js, dict) else None) or []
+            out["library"][t] = len(rows)
+    except ToolError as e:
+        out["error"] = str(e)
+        out["next"] = "The workspace didn't answer with this key. Check the key and MCP URL in Airtable."
+        return out
+    missing = [fw for fw, oid in out["agents"].items() if not oid]
+    empty = not any(out["library"].values())
+    out["ready"] = not missing and not empty
+    out["next"] = ("Ready." if out["ready"] else
+                   "Copy the framework agents into this workspace." if missing else
+                   "Seed the client's library (product, personas, proof) from the onboarding inputs.")
+    return out
+
+
+def octave_copy_agents(args):
+    """Create the Cymate template agents that are missing in the client's own workspace (same instructions)."""
+    client = (args.get("client") or "").strip()
+    key, url, ws, separate = _own_workspace(client)
+    if not separate:
+        raise ToolError("This client has no workspace of its own in Octave yet (key + MCP URL in Airtable). Nothing was copied.")
+    have = _client_agents(client, key, url, fresh=True)
+    want = [fw for fw in (args.get("frameworks") or list(FW_NAMES)) if fw in FW_NAMES]
+    created, skipped = {}, {}
+    for fw in want:
+        if have.get(fw):
+            skipped[fw] = have[fw]
+            continue
+        t = agent_template({"framework": fw})
+        js = octave_mcp(url, key, "create_agent", {
+            "type": "CONTENT", "name": t["name"] or f"{TEMPLATE_PREFIX}{FW_NAMES[fw]}",
+            "description": f"Copied from the Cymate template agent {t['agent_oid']} by the campaign builder. Do not edit per campaign.",
+            "model": t["model"] or "ECHO", "outputFormat": "JSON", "instructions": t["instructions"],
+            "jsonSchemaInstructions": t["json_schema_instructions"] or None,
+            "enableWebSearch": True, "webSearchInstructions": t["web_search_instructions"] or None,
+            "enableBrandVoice": False, "enableCrmActivity": False})
+        d = (js.get("data") if isinstance(js, dict) else None) or {}
+        if not d.get("oId"):
+            raise ToolError(f"Octave didn't create {fw}: {str(js)[:200]}")
+        created[fw] = d["oId"]
+    _AGENTS_CACHE.pop(client, None)
+    return {"client": client, "workspace": ws, "created": created, "already_there": skipped}
+
+
+def octave_seed_library(args):
+    """Propose library entities in the client's own workspace as suggestions the CSM accepts in Octave."""
+    client = (args.get("client") or "").strip()
+    key, url, ws, separate = _own_workspace(client)
+    if not separate:
+        raise ToolError("This client has no workspace of its own in Octave yet (key + MCP URL in Airtable). Nothing was proposed.")
+    ents = args.get("entities") or []
+    if not ents or len(ents) > 20:
+        raise ToolError("send 1 to 20 entities")
+    ok, failed = [], []
+    for e in ents:
+        try:
+            js = octave_mcp(url, key, "create_suggestion", {"changeType": "add", "entityType": e.get("entity_type"),
+                                                             "name": e.get("name"), "instructions": e.get("instructions")})
+            ok.append({"entity_type": e.get("entity_type"), "name": e.get("name"),
+                       "suggestion": ((js.get("data") or js) if isinstance(js, dict) else {}).get("oId")})
+        except ToolError as err:
+            failed.append({"name": e.get("name"), "error": str(err)[:200]})
+    return {"client": client, "workspace": ws, "proposed": ok, "failed": failed,
+            "next": "Accept or reject each one in Octave (Suggestions inbox)."}
+
+
 # ---------- MCP plumbing ----------
 
 S = lambda props, req=(): {"type": "object", "properties": props, "required": list(req)}
@@ -549,6 +681,14 @@ TOOLS = {
                            ["client", "framework", "brief", "leads"]), False),
     "get_agent_runs": (get_agent_runs, "Status and results of agent runs started with start_agent_runs.",
                        S({"job_ids": {"type": "array", "items": {"type": "string"}}}, ["job_ids"]), True),
+    "octave_setup_status": (octave_setup_status, "Stage 1 check of the client's own Octave workspace: key and MCP URL in Airtable, reachable, which of the 5 framework agents exist there, library size. Never returns a key.",
+                            S({"client": {"type": "string"}}, ["client"]), True),
+    "octave_copy_agents": (octave_copy_agents, "Copy the Cymate template framework agents that are missing into the client's own Octave workspace (same instructions). Only for a workspace other than Cymate's.",
+                           S({"client": {"type": "string"}, "frameworks": {"type": "array", "items": {"type": "string"}}}, ["client"]), False),
+    "octave_seed_library": (octave_seed_library, "Propose library entities (product, persona, proof_point, competitor, ...) in the client's own Octave workspace as suggestions the CSM accepts in Octave. Up to 20.",
+                            S({"client": {"type": "string"}, "entities": {"type": "array", "items": {"type": "object", "properties": {
+                                "entity_type": {"type": "string"}, "name": {"type": "string"}, "instructions": {"type": "string"}},
+                                "required": ["entity_type", "name", "instructions"]}}}, ["client", "entities"]), False),
 }
 
 

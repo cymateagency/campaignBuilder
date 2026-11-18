@@ -1,0 +1,738 @@
+<title>Cymate Campaign Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mohave:wght@600;700&display=swap">
+<style>
+@font-face{font-family:"Satoshi";src:url(data:font/woff2;base64,__SAT400__) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Satoshi";src:url(data:font/woff2;base64,__SAT500__) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Satoshi";src:url(data:font/woff2;base64,__SAT700__) format("woff2");font-weight:700;font-display:swap}
+/* Layout: quiet luxury. One calm column per stage on a deep black, hairlines instead of boxes, Satoshi in sentence case,
+   orange reserved for the one action and the current position. Mohave only lives in the logo. Single dark look by design. */
+:root{
+  --ink:#0b0b0c;          /* page */
+  --deck:#121214;         /* raised surfaces */
+  --deck-2:#18181b;       /* inputs, hover */
+  --line:rgba(255,255,255,.07);
+  --line-2:rgba(255,255,255,.13);
+  --chalk:#f2f1ef;        /* primary text, a hair warm */
+  --ash:#a3a19d;          /* secondary text */
+  --smoke:#8b8984;        /* hints (5.4:1 on --ink) */
+  --ember:#fd5e02;        /* Cymate orange: actions and position only */
+  --ember-ink:#170900;
+  --ember-glow:rgba(253,94,2,.10);
+  --go:#5cc28a; --hold:#d9a948; --stop:#e46a5c;
+  --display:"Mohave","Arial Narrow",sans-serif;
+  --text:"Satoshi","Helvetica Neue",Arial,sans-serif;
+  --code:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--chalk);font-family:var(--text);font-weight:500;font-size:15px;line-height:1.6;letter-spacing:-.011em;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--ink)}
+::selection{background:var(--ember);color:var(--ember-ink)}
+a{color:inherit}
+button,input,textarea,select{font:inherit;color:inherit;letter-spacing:inherit}
+:focus-visible{outline:2px solid var(--ember);outline-offset:3px}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100%}
+.rail{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));border-right:1px solid var(--line);display:flex;flex-direction:column;gap:36px;padding-block:28px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:20px;background:var(--ink)}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.mark{width:30px;height:30px;background:var(--ember);border-radius:6px;display:grid;place-items:center;font-family:var(--display);font-weight:700;color:#111;font-size:8.5px;line-height:.82;letter-spacing:.02em;text-align:center;padding-top:2px}
+.word{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.03em}
+.word i,.dot{color:var(--ember);font-style:normal}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav .lbl{font-size:12px;color:var(--smoke);margin:0 0 8px 10px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;text-decoration:none;color:var(--ash);border-radius:8px}
+.nav a svg{width:16px;height:16px;flex:none;opacity:.8}
+.nav a:hover{color:var(--chalk);background:var(--deck)}
+.nav a[aria-current="page"]{color:var(--chalk);background:var(--deck)}
+.nav a[aria-current="page"] svg{color:var(--ember);opacity:1}
+.rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:14px;font-size:13px;color:var(--ash)}
+.bridge{display:flex;align-items:center;gap:9px}
+.led{width:7px;height:7px;border-radius:50%;background:var(--hold);flex:none}
+.who{display:flex;align-items:center;gap:10px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--deck-2);display:grid;place-items:center;font-weight:700;font-size:11px;color:var(--ash)}
+
+.main{min-width:0;padding-block:56px 96px;padding-left:max(48px,env(safe-area-inset-left,0px));padding-right:max(48px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+
+/* ---------- type ---------- */
+.eyebrow{font-size:13px;color:var(--smoke);font-weight:500}
+.hand,.say{display:none}
+h1,h2,h3{margin:0;font-family:var(--text);font-weight:700;text-wrap:balance}
+h1{font-size:clamp(34px,4vw,46px);line-height:1.05;letter-spacing:-.035em}
+h2{font-size:21px;line-height:1.2;letter-spacing:-.025em}
+h3{font-size:16px;line-height:1.3;letter-spacing:-.015em}
+p{margin:0}
+.muted{color:var(--ash)}
+.hint{color:var(--smoke);font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+code,.mono{font-family:var(--code);font-size:12.5px;letter-spacing:0;font-weight:400}
+
+/* ---------- surfaces ---------- */
+.panel{background:transparent;border-top:1px solid var(--line);padding:24px 0 0;display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel.hot{border-top-color:var(--line-2)}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ph .t{display:flex;flex-direction:column;gap:4px;min-width:0}
+.grid{display:grid;gap:28px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:48px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sep{height:1px;background:var(--line);border:0;margin:0}
+
+/* ---------- controls ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:1px solid var(--line-2);background:transparent;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;border-radius:8px;white-space:nowrap;transition:border-color .15s,background .15s}
+.btn:hover{border-color:rgba(255,255,255,.28);background:var(--deck)}
+.btn.ember{background:var(--ember);border-color:var(--ember);color:var(--ember-ink)}
+.btn.ember:hover{background:#ff6f1c;border-color:#ff6f1c}
+.btn.ghost{border-color:transparent;color:var(--ash)}
+.btn.ghost:hover{color:var(--chalk);background:var(--deck)}
+.btn .arr{opacity:.7}
+.btn[disabled]{opacity:.4;cursor:not-allowed;background:transparent;color:var(--ash);border-color:var(--line-2)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.field label{font-size:13px;color:var(--ash)}
+.input,textarea.input,select.input{width:100%;background:var(--deck);border:1px solid var(--line);padding:11px 13px;border-radius:8px;outline:none;transition:border-color .15s}
+.input:focus{border-color:rgba(253,94,2,.7)}
+textarea.input{resize:vertical;min-height:96px;line-height:1.55}
+
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ash);white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--smoke)}
+.pill.go::before{background:var(--go)} .pill.hold::before{background:var(--hold)} .pill.stop::before{background:var(--stop)} .pill.ember::before{background:var(--ember)}
+.pill.plain::before{display:none}
+.chip{display:inline-flex;align-items:center;padding:5px 10px;background:var(--deck);border-radius:6px;font-size:13px;color:var(--chalk);max-width:100%}
+.chip.x{color:var(--smoke);text-decoration:line-through;text-decoration-color:rgba(228,106,92,.7)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* ---------- header ---------- */
+.radarhead{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:48px;align-items:center}
+.radarhead .lead{display:flex;flex-direction:column;gap:16px;min-width:0}
+.radar{position:relative;width:100%;max-width:220px;aspect-ratio:1/1;justify-self:end;opacity:.9}
+.radar svg{width:100%;height:100%;display:block}
+.sweep{transform-origin:150px 150px;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.callout{display:none}
+@media (prefers-reduced-motion:reduce){.sweep{animation:none}}
+
+/* ---------- stats ---------- */
+.stat{display:flex;flex-direction:column-reverse;gap:4px}
+.stat .v{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:13px;font-weight:500;letter-spacing:-.01em;color:var(--smoke);margin-left:8px}
+.stat .k{font-size:13px;color:var(--smoke)}
+.g4 > .panel.stat{border-top:1px solid var(--line);padding-top:18px}
+
+/* ---------- tables ---------- */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-weight:500;font-size:12.5px;color:var(--smoke);text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:16px 16px 16px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{color:#fff}
+tbody tr.click:hover .cname{color:var(--ember)}
+.cname{font-weight:700;letter-spacing:-.015em}
+.sub{color:var(--smoke);font-size:12.5px}
+
+/* ---------- stage rail ---------- */
+.stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;border-top:1px solid var(--line)}
+.stg{display:flex;flex-direction:column;gap:3px;padding-top:14px;text-decoration:none;position:relative;min-width:0;color:var(--smoke)}
+.stg .n{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.stg .n + .eyebrow{display:none}
+.stg .nm{font-size:15px;font-weight:700;letter-spacing:-.015em;color:var(--ash)}
+.stg .gate{font-size:12.5px;color:var(--smoke)}
+.stg::before{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;background:transparent}
+.stg.done::before{background:rgba(92,194,138,.55)}
+.stg.done .n{color:var(--go)}
+.stg[aria-current="step"]::before{background:var(--ember);height:2px;top:-1.5px}
+.stg[aria-current="step"] .n{color:var(--ember)}
+.stg[aria-current="step"] .nm{color:var(--chalk)}
+.stg:hover .nm{color:var(--chalk)}
+
+/* ---------- stage 1 ---------- */
+.inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.src{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;min-width:0}
+.src .ic{width:32px;height:32px;border-radius:7px;background:var(--deck-2);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--smoke);flex:none}
+.src .ic.on{color:var(--ember)}
+.src .meta{min-width:0;display:flex;flex-direction:column}
+.src .meta b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drop{border:1px dashed var(--line-2);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--ash);font-size:13.5px;cursor:pointer;text-align:center}
+.drop:hover{border-color:var(--ash);color:var(--chalk)}
+.groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.grp{display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid var(--line);border-radius:12px;background:transparent;cursor:pointer;text-align:left;min-width:0;transition:border-color .15s,background .15s}
+.grp:hover{border-color:var(--line-2);background:var(--deck)}
+.grp[aria-pressed="true"]{border-color:rgba(253,94,2,.65);background:var(--deck)}
+.grp .gid{font-size:12.5px;font-weight:600;color:var(--smoke)}
+.grp[aria-pressed="true"] .gid{color:var(--ember)}
+.grp h3{font-size:16px}
+.grp dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12.5px}
+.grp dt{color:var(--smoke)} .grp dd{margin:0;color:var(--ash)}
+
+/* ---------- stage 2 ---------- */
+.filters{display:grid;grid-template-columns:160px minmax(0,1fr);gap:14px 20px;align-items:start}
+.filters .k{font-size:13px;color:var(--smoke);padding-top:5px}
+.funnel{display:flex;flex-direction:column;gap:10px}
+.fbar{display:grid;grid-template-columns:150px minmax(0,1fr) 34px;gap:14px;align-items:center;font-size:13.5px;color:var(--ash)}
+.fbar .track{height:6px;background:var(--deck-2);border-radius:3px;position:relative;overflow:hidden}
+.fbar .fill{position:absolute;inset:0 auto 0 0;background:var(--chalk);opacity:.85;border-radius:3px}
+.fbar .fill.out{background:var(--stop);opacity:.7}
+.fbar .fill.held{background:var(--hold);opacity:.75}
+.fbar .fill.keep{background:var(--go)}
+.fbar .c{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--chalk)}
+.slider{width:100%;accent-color:var(--ember)}
+.payload{background:var(--deck);border-radius:10px;padding:14px;font-family:var(--code);font-size:11.5px;color:var(--smoke);max-height:110px;overflow:auto;white-space:pre-wrap;word-break:break-all;letter-spacing:0}
+
+/* ---------- stage 3 ---------- */
+.brief{display:grid;grid-template-columns:140px minmax(0,1fr);gap:0}
+.brief dt,.brief dd{margin:0;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.brief dt{font-size:13px;color:var(--smoke)}
+.brief dt:last-of-type,.brief dd:last-of-type{border-bottom:0}
+.fw{display:flex;flex-direction:column;gap:10px;padding:22px;border:1px solid var(--line-2);border-radius:14px;background:linear-gradient(180deg,var(--ember-glow),transparent 55%),var(--deck)}
+.fw .nm{font-size:30px;line-height:1.05;font-weight:700;letter-spacing:-.04em}
+.considered{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--ash)}
+.considered div{display:flex;gap:10px;align-items:baseline}
+.considered .pill{color:var(--smoke)}
+.leadlist{display:flex;flex-direction:column;max-height:600px;overflow:auto;border-right:1px solid var(--line);padding-right:12px}
+.lead-i{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:12px 12px;border-radius:8px;cursor:pointer;text-align:left;background:transparent;border:0;width:100%}
+.lead-i:hover{background:var(--deck)}
+.lead-i[aria-current="true"]{background:var(--deck-2)}
+.lead-i[aria-current="true"] b{color:var(--chalk)}
+.lead-i b{font-weight:600;font-size:14px;color:var(--ash);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead-i .sub{grid-column:1/2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mail{background:#f7f6f3;color:#1c1b19;border-radius:14px;font-size:15px;line-height:1.65;overflow:hidden;box-shadow:0 30px 60px -30px rgba(0,0,0,.8)}
+.mail .mh{display:grid;grid-template-columns:64px minmax(0,1fr);gap:6px 12px;padding:14px 22px;border-bottom:1px solid #e6e3dd;font-size:13px}
+.mail .mh span:nth-child(odd){color:#6b665f}
+.mail .mb{padding:22px;white-space:pre-wrap;letter-spacing:-.005em}
+.mail .sig{color:#55514a;margin-top:16px}
+.fact{display:flex;flex-direction:column;gap:6px;font-size:14px;padding-left:14px;border-left:2px solid var(--line-2)}
+.fact .eyebrow{font-size:12.5px}
+.fact a{color:var(--ash);word-break:break-all;font-size:12.5px;text-decoration-color:var(--line-2)}
+.fact a:hover{color:var(--ember)}
+.approvals{display:flex;flex-direction:column}
+.ap{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.ap:last-child{border-bottom:0}
+.ap .dotn{width:22px;height:22px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--smoke)}
+.ap.done .dotn{background:var(--go);border-color:var(--go);color:#07210f}
+.ap.now .dotn{border-color:var(--ember);color:var(--ember)}
+.ap b{font-weight:600}
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{padding:11px 14px;border-radius:12px;background:var(--deck);font-size:14px;max-width:92%;color:var(--ash)}
+.msg.me{align-self:flex-end;background:var(--deck-2);color:var(--chalk)}
+
+/* ---------- stage 4 ---------- */
+.checks{display:flex;flex-direction:column}
+.ck{display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--ash)}
+.ck:last-child{border-bottom:0}
+.ck .r{font-size:11.5px;font-weight:700;letter-spacing:.02em}
+.ck .r.PASS{color:var(--go)} .ck .r.WARN{color:var(--hold)} .ck .r.TODO{color:var(--smoke)}
+.ck label{display:flex;gap:10px;align-items:center;cursor:pointer;color:var(--chalk)}
+.ck input{accent-color:var(--ember);width:16px;height:16px}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 24px;font-size:14px}
+.kv dt{color:var(--smoke);font-size:13px;padding-top:1px}
+.kv dd{margin:0;word-break:break-word}
+
+/* ---------- gate bar ---------- */
+.gatebar{position:sticky;bottom:16px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 16px 14px 20px;margin-bottom:env(safe-area-inset-bottom,0px);border:1px solid var(--line-2);border-radius:14px;background:rgba(18,18,20,.88);backdrop-filter:blur(14px);box-shadow:0 20px 50px -20px rgba(0,0,0,.9)}
+.gatebar .gq{display:flex;flex-direction:column;gap:1px;min-width:0}
+.gatebar .gq .eyebrow{display:none}
+.gatebar b{font-weight:600;font-size:15px;letter-spacing:-.015em}
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));z-index:40;padding:11px 18px;border-radius:10px;background:var(--chalk);color:#111;font-weight:600;font-size:14px;transform:translate(-50%,10px);opacity:0;transition:.2s}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.sample{font-size:13px;color:var(--smoke)}
+.sample .pill{display:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){.groups{grid-template-columns:repeat(2,minmax(0,1fr))}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr;gap:36px}}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:row;align-items:center;flex-wrap:wrap;gap:16px;border-right:0;border-bottom:1px solid var(--line);padding-right:max(16px,env(safe-area-inset-right,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-block:14px}
+  .nav{flex-direction:row;flex-wrap:wrap}.nav .lbl,.rail-foot{display:none}
+  .main{padding-block:32px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .radarhead{grid-template-columns:1fr}.radar{display:none}
+  .stages{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .g2,.g3,.inputs{grid-template-columns:1fr}
+  .filters{grid-template-columns:1fr;gap:6px}.filters .k{padding-top:10px}
+  .fbar{grid-template-columns:110px minmax(0,1fr) 30px}
+  .brief{grid-template-columns:1fr}.brief dt{border-bottom:0;padding-bottom:0}
+  #mailgrid{grid-template-columns:1fr !important}.leadlist{max-height:260px;border-right:0;padding-right:0}
+}
+@media (max-width:520px){.groups,.g4{grid-template-columns:1fr}}
+
+/* ---------- copy screen: approval track, reader, folds ---------- */
+.track{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 24px;align-items:center;padding:16px 18px;border:1px solid var(--line-2);border-radius:14px;background:rgba(18,18,20,.9);backdrop-filter:blur(14px)}
+.track ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.track li{display:flex;gap:10px;align-items:flex-start;min-width:0;color:var(--smoke)}
+.track li > span:last-child{display:flex;flex-direction:column;min-width:0}
+.track li b{font-weight:600;font-size:14px;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track li .hint{font-size:12.5px}
+.track li .dotn{width:22px;height:22px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;margin-top:1px}
+.track li.done .dotn{background:var(--go);border-color:var(--go);color:#07210f}
+.track li.now .dotn{border-color:var(--ember);color:var(--ember)}
+.track li.now b{color:var(--chalk)}
+.track-act{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.fbrow{grid-column:1/-1}
+.reader{display:flex;flex-direction:column;gap:20px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--ash);cursor:pointer;font-size:13.5px;font-weight:600}
+.tab .num{font-weight:500;color:var(--smoke)}
+.tab:hover{color:var(--chalk);background:var(--deck)}
+.tab[aria-pressed="true"]{color:var(--chalk);background:var(--deck);border-color:var(--line-2)}
+.readgrid{display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:28px;align-items:start}
+.seen{color:var(--go);font-size:12px;font-weight:700}
+.fold{border-top:1px solid var(--line);padding-top:4px}
+.fold:last-of-type{border-bottom:1px solid var(--line)}
+.fold summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;cursor:pointer}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary > span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fold summary b{font-weight:600;font-size:15px}
+.fold summary > .hint::after{content:" +";}
+.fold[open] summary > .hint::after{content:" –";}
+.fold[open]{padding-bottom:20px}
+.fold[open] > :not(summary){margin-bottom:14px}
+@media (max-width:860px){
+  .track{position:static;grid-template-columns:1fr}.track ol{grid-template-columns:repeat(2,minmax(0,1fr))}.track-act{justify-content:flex-start}
+  .readgrid{grid-template-columns:1fr}.leadlist{max-height:240px}
+}
+.setup{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.setup li{display:flex;gap:10px;align-items:flex-start;min-width:0;color:var(--smoke)}
+.setup li > span:last-child{display:flex;flex-direction:column;min-width:0}
+.setup li b{font-weight:600;font-size:14px;color:var(--ash)}
+.setup li .dotn{width:22px;height:22px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.setup li.done .dotn{background:var(--go);border-color:var(--go);color:#07210f}
+.setup li.done b{color:var(--chalk)}
+.banner{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid var(--line-2);border-radius:12px;background:var(--deck)}
+.banner .led{margin-top:7px}
+.banner > div{display:flex;flex-direction:column;gap:2px}
+@media (max-width:860px){.setup{grid-template-columns:1fr 1fr}}
+</style>
+
+<div class="shell">
+  <aside class="rail">
+    <a class="brand" href="#campaigns" aria-label="Cymate campaign builder home">
+      <span class="mark" aria-hidden="true">CY<br>MA<br>TE</span>
+      <span class="word">CYMATE<i>.</i></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <div class="lbl">Builder</div>
+      <a href="#campaigns" data-nav="campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 19 6"/></svg>Campaigns</a>
+      <a href="#build-1" data-nav="build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h10M4 17h6"/></svg>Build a campaign</a>
+      <a href="#playbook" data-nav="playbook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h7M9 14h7"/></svg>Frameworks</a>
+    </nav>
+    <div class="rail-foot">
+      <div class="bridge" id="bridgeStatus"><span class="led"></span><span>Bridge: connecting…</span></div>
+      <div class="who"><span class="avatar">JO</span><span>Juan · CSM</span></div>
+    </div>
+  </aside>
+
+  <main class="main" id="main"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Preview data (app/preview.sample.json, or a git-ignored app/preview.local.json), injected by app/build.py. */
+const PREVIEW = __PREVIEW__;
+const LEADS = PREVIEW.leads;
+const RUN = { client: PREVIEW.client, campaign: PREVIEW.campaign, count: PREVIEW.count, pulled: PREVIEW.pulled };
+const GROUPS = PREVIEW.groups;
+const SAMPLES = PREVIEW.samples;
+const STAGES = [
+  { n: 1, key: "onboarding", name: "Onboarding", gate: "Pick group + offer" },
+  { n: 2, key: "list", name: "Lead list", gate: "Approve search + pull" },
+  { n: 3, key: "copy", name: "Copy", gate: "CSM, then client approve" },
+  { n: 4, key: "campaign", name: "Campaign", gate: "Build draft, then start" },
+];
+const STATE = { done: { 1: true, 2: true, 3: false, 4: false }, group: "G1", pull: 50, lead: 0, csm: false, sent: false, client: false, round: 1,
+  todos: {}, chat: [{ me: false, t: "Copy Studio ready. Ask for a change to the brief, a line, or one lead's email." }] };
+try { const s = JSON.parse(localStorage.getItem("cymate-builder-v2") || "null"); if (s) Object.assign(STATE, s); } catch {}
+function persist() { try { localStorage.setItem("cymate-builder-v2", JSON.stringify(STATE)); } catch {} }
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("show"), 2200); }
+
+/* ---------- radar ---------- */
+function radar(callouts) {
+  const ring = r => `<circle cx="150" cy="150" r="${r}" fill="none" stroke="rgba(255,255,255,.09)"/>`;
+  return `<div class="radar" aria-hidden="true"><svg viewBox="0 0 300 300">
+    <defs><linearGradient id="sw" x1="0" x2="1"><stop offset="0" stop-color="#fd5e02" stop-opacity="0"/><stop offset="1" stop-color="#fd5e02" stop-opacity=".45"/></linearGradient></defs>
+    ${ring(140)}${ring(100)}${ring(60)}
+    <line x1="10" y1="150" x2="290" y2="150" stroke="rgba(255,255,255,.07)"/><line x1="150" y1="10" x2="150" y2="290" stroke="rgba(255,255,255,.07)"/>
+    <g class="sweep"><path d="M150 150 L290 150 A140 140 0 0 0 249 51 Z" fill="url(#sw)"/><line x1="150" y1="150" x2="290" y2="150" stroke="#fd5e02" stroke-width="1.4"/></g>
+    <circle cx="96" cy="88" r="3" fill="#fd5e02" opacity=".8"/><circle cx="222" cy="214" r="3" fill="#fd5e02" opacity=".6"/><circle cx="70" cy="196" r="2.5" fill="#fd5e02" opacity=".5"/>
+    <rect x="118" y="118" width="64" height="64" rx="12" fill="#fd5e02"/>
+    <text x="150" y="139" text-anchor="middle" font-family="Mohave, Arial Narrow, sans-serif" font-weight="700" font-size="19" fill="#111">CY</text>
+    <text x="150" y="157" text-anchor="middle" font-family="Mohave, Arial Narrow, sans-serif" font-weight="700" font-size="19" fill="#111">MA</text>
+    <text x="150" y="175" text-anchor="middle" font-family="Mohave, Arial Narrow, sans-serif" font-weight="700" font-size="19" fill="#111">TE</text>
+  </svg>${callouts.map(c => `<span class="callout" style="left:${c[0]}%;top:${c[1]}%">${esc(c[2])}</span>`).join("")}</div>`;
+}
+
+/* ---------- live data: the local bridge (host:cymate_copy) and Claude (sample) ---------- */
+const BR = "host:cymate_copy";
+const LIVE = { mcp: null, sample: null, bridge: null, clients: [], client: "", octave: null, onb: null, ctx: null, props: null, picked: {}, busy: "", err: "", skipOctave: false };
+async function bridge(tool, input) {
+  if (!LIVE.mcp) throw { code: "server_not_connected" };
+  try { const r = await LIVE.mcp.callTool(BR, tool, input || {}, { cache: false }); LIVE.bridge = true; return r.payload; }
+  catch (e) { if (["server_not_connected", "not_granted", "capability_disabled", "server_not_found"].includes(e && e.code)) LIVE.bridge = false; throw e; }
+}
+function errText(e) {
+  if (!e) return "Something went wrong.";
+  if (e.code === "server_not_connected" || e.code === "server_not_found") return "The bridge isn't running on this laptop. Open this page in the Claude desktop app with the cymate_copy bridge set up.";
+  if (e.code === "not_granted") return "Access to the bridge was declined. Allow it from the page's Permissions menu.";
+  if (e.code === "rate_limited") return "Claude is busy. Try again in a minute.";
+  return (e.message || String(e)).replace(/^Error:\s*/, "").slice(0, 300);
+}
+async function bootLive() {
+  if (!window.claude || !window.claude.use) { LIVE.bridge = false; render(); return; }
+  const [m, s] = await Promise.all(["mcp", "sample"].map(n => window.claude.use(n).catch(() => null)));
+  LIVE.mcp = m; LIVE.sample = s;
+  if (!m) { LIVE.bridge = false; render(); return; }
+  try { const r = await bridge("list_clients", {}); LIVE.clients = r.clients || []; } catch (e) { LIVE.err = errText(e); }
+  render();
+}
+async function busy(label, fn) {
+  LIVE.busy = label; LIVE.err = ""; render();
+  try { await fn(); } catch (e) { LIVE.err = errText(e); }
+  LIVE.busy = ""; render();
+}
+function loadClient(name) {
+  LIVE.client = name; LIVE.octave = LIVE.onb = LIVE.ctx = LIVE.props = null; LIVE.picked = {}; LIVE.skipOctave = false;
+  return busy("Checking the client in Airtable and Octave", async () => {
+    const [o, n] = await Promise.all([bridge("octave_setup_status", { client: name }), bridge("onboarding_context", { client: name }).catch(() => null)]);
+    LIVE.octave = o; LIVE.onb = n;
+  });
+}
+function onboardingText() {
+  const typed = (($("ctx") || {}).value || "").trim();
+  return JSON.stringify(LIVE.onb || {}).slice(0, 24000) + (typed ? `\n\nCSM NOTES:\n${typed}` : "");
+}
+function readOnboarding() {
+  return busy("Claude is reading the onboarding inputs", async () => {
+    LIVE.ctx = await LIVE.sample.json(`You prepare stage 1 of Cymate's outbound campaign pipeline for a CSM. From the client's onboarding inputs below, write the client context.
+Use ONLY facts in the inputs. Never invent customers, numbers or claims. Put anything the inputs mark as not approved yet under not_approved.
+Reply with JSON only: {"company":"one line: what it is and where","offers":["one line each"],"buyers":"titles and seniority","size":"company size and revenue","region":"regions","proof":["approved proof, one line each"],"not_approved":["..."],"excluded":"industries or companies to exclude","open_questions":["..."]}
+
+CLIENT: ${LIVE.client}
+INPUTS:
+${onboardingText()}`, { cache: false, modelTier: "complex" });
+  });
+}
+function proposeLibrary() {
+  return busy("Claude is drafting the client's Octave library", async () => {
+    const arr = await LIVE.sample.json(`You set up the Octave library for a Cymate client from its onboarding inputs. Octave turns each entity's "instructions" into a library entry, so put every relevant fact from the inputs into it, word for word where possible.
+Rules: use ONLY facts in the inputs; never invent customers, numbers or claims; leave out anything marked as not approved; one "product" or "service" per offer; one "persona" per buyer group; one "proof_point" per approved result with its numbers; one "competitor" per competitor named; at most 14 entities.
+Reply with a JSON array only: [{"entity_type":"product|service|persona|segment|proof_point|competitor|use_case","name":"short name","instructions":"the facts for this entity"}]
+
+CLIENT: ${LIVE.client}
+INPUTS:
+${onboardingText()}`, { cache: false, modelTier: "complex" });
+    LIVE.props = (Array.isArray(arr) ? arr : []).filter(x => x && x.entity_type && x.name && x.instructions).slice(0, 20);
+    LIVE.picked = Object.fromEntries(LIVE.props.map((_, i) => [i, true]));
+  });
+}
+function sendLibrary() {
+  const ents = LIVE.props.filter((_, i) => LIVE.picked[i]);
+  if (!ents.length) { toast("Pick at least one entry"); return; }
+  return busy(`Sending ${ents.length} suggestions to Octave`, async () => {
+    const r = await bridge("octave_seed_library", { client: LIVE.client, entities: ents });
+    toast(`${r.proposed.length} suggestions in Octave${r.failed.length ? `, ${r.failed.length} failed` : ""}`);
+    LIVE.props = null; LIVE.octave = await bridge("octave_setup_status", { client: LIVE.client });
+  });
+}
+function copyAgents() {
+  return busy("Copying the framework agents into the client's workspace", async () => {
+    const r = await bridge("octave_copy_agents", { client: LIVE.client });
+    toast(`${Object.keys(r.created).length} agents copied`);
+    LIVE.octave = await bridge("octave_setup_status", { client: LIVE.client });
+  });
+}
+
+function octavePanel() {
+  const o = LIVE.octave;
+  if (!o) return "";
+  const step = (ok, t, s) => `<li class="${ok ? "done" : ""}"><span class="dotn">${ok ? "✓" : "·"}</span><span><b>${t}</b><span class="hint">${s}</span></span></li>`;
+  const agents = Object.entries(o.agents || {}), have = agents.filter(([, v]) => v).length;
+  const lib = Object.entries(o.library || {}).filter(([, n]) => n).map(([t, n]) => `${n} ${t.replace("_", " ")}`).join(" · ");
+  const libOk = Object.values(o.library || {}).some(Boolean);
+  const keys = o.airtable.octave_key && o.airtable.octave_mcp_url;
+  return `<div class="panel ${o.ready ? "" : "hot"}"><div class="ph"><div class="t"><span class="eyebrow">Octave workspace</span><h2>${o.ready ? "Ready" : "Set up the client's brain"}</h2></div>${o.ready ? '<span class="pill go">Ready</span>' : '<span class="pill hold">Needs setup</span>'}</div>
+    <ol class="setup">${step(keys, "Key and MCP URL in Airtable", keys ? "Found on the client's row" : "Paste them on the client's Airtable row")}
+      ${step(o.separate_workspace, "The client's own workspace", o.separate_workspace ? `Workspace ${esc(o.workspace)}` : "Create it in Octave, not the shared Cymate one")}
+      ${step(have === agents.length && agents.length, "Framework agents", `${have} of ${agents.length} copied${have < agents.length && o.reachable ? "" : ""}`)}
+      ${step(libOk, "Client library", libOk ? lib : "Product, personas, proof and competitors")}</ol>
+    ${o.error ? `<p class="hint" style="color:var(--stop)">${esc(o.error)}</p>` : ""}
+    <p class="muted">${esc(o.next || "")}</p>
+    <div class="row">${o.reachable && have < agents.length ? '<button class="btn ember" data-live="copy">Copy framework agents</button>' : ""}
+      ${o.reachable ? `<button class="btn ${have === agents.length && !libOk ? "ember" : ""}" data-live="propose" ${LIVE.sample ? "" : "disabled"}>Draft the library from onboarding</button>` : ""}
+      <button class="btn ghost" data-live="recheck">Check again</button></div>
+    ${LIVE.props ? `<div class="stack"><span class="eyebrow">Proposed library · goes to Octave as suggestions</span><div class="checks">${LIVE.props.map((e, i) => `<div class="ck"><span class="r TODO">${esc(e.entity_type.replace("_", " "))}</span><label><input type="checkbox" data-pick="${i}" ${LIVE.picked[i] ? "checked" : ""}><span><b>${esc(e.name)}</b><span class="hint" style="display:block">${esc(e.instructions.slice(0, 160))}${e.instructions.length > 160 ? "…" : ""}</span></span></label></div>`).join("")}</div>
+      <div class="row"><button class="btn ember" data-live="send">Send ${Object.values(LIVE.picked).filter(Boolean).length} to Octave</button><span class="hint">The CSM accepts each one in Octave's Suggestions inbox.</span></div></div>` : ""}
+  </div>`;
+}
+
+/* ---------- views ---------- */
+function viewCampaigns() {
+  const active = SAMPLES.length, waiting = SAMPLES.filter(s => s.status[0] === "hold").length;
+  return `<section class="radarhead">
+    <div class="lead"><h1>Campaigns<span class="dot">.</span></h1>
+      <p class="muted" style="max-width:52ch;font-size:16px">Every campaign moves through four stages. Each one stops where a person decides, so nothing is pulled, written or sent without a yes.</p>
+      <div class="row" style="margin-top:4px"><a class="btn ember" href="#build-1">New campaign <span class="arr">↗</span></a><a class="btn ghost" href="#build-${STATE.done[3] ? 4 : 3}">Continue ${esc(RUN.client)}</a></div></div>
+    ${radar([[6, 60, "Meeting booked"], [62, 80, "Positive reply"], [60, 12, "Client approved"]])}
+  </section>
+  <div class="grid g4">
+    <div class="panel stat"><span class="k">Campaigns in build</span><span class="v num">${active}</span></div>
+    <div class="panel stat"><span class="k">Waiting on a person</span><span class="v num">${waiting}</span></div>
+    <div class="panel stat"><span class="k">Leads ready</span><span class="v num">${LEADS.length}<small>${esc(RUN.client)}</small></span></div>
+    <div class="panel stat"><span class="k">Spend this month</span><span class="v num">${PREVIEW.spend_month}<small>credits</small></span></div>
+  </div>
+  <p class="sample">Preview with sample data. Open it in the Claude desktop app with the bridge set up to work on real clients.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Client · campaign</th><th>Stage</th><th>Next gate</th><th class="num">Leads</th><th>Spend</th><th>CSM</th></tr></thead>
+    <tbody>${SAMPLES.map(s => `<tr class="click" data-go="#build-${s.stage}">
+      <td><div class="cname">${esc(s.client)}</div><div class="sub mono">${esc(s.camp)}</div></td>
+      <td><span class="pill plain">${s.stage} · ${STAGES[s.stage - 1].name}</span></td>
+      <td><span class="pill ${s.status[0]}">${esc(s.status[1])}</span></td>
+      <td class="num">${s.leads || "–"}</td><td class="sub">${esc(s.spend)}</td><td>${esc(s.csm)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function stageRail(cur) {
+  return `<nav class="stages" aria-label="Stages">${STAGES.map(s => `<a class="stg ${STATE.done[s.n] ? "done" : ""}" href="#build-${s.n}" ${s.n === cur ? 'aria-current="step"' : ""}>
+    <span class="n">${STATE.done[s.n] ? "✓ " : ""}Stage ${s.n}</span><span class="eyebrow" style="color:${STATE.done[s.n] ? "var(--go)" : "var(--smoke)"}">${STATE.done[s.n] ? "Done" : "Stage"}</span><span class="nm">${s.name}</span><span class="gate">Gate: ${s.gate}</span></a>`).join("")}</nav>`;
+}
+function head(n, title, lede, hand) {
+  return `<div class="row" style="justify-content:space-between;align-items:flex-end">
+    <div class="stack" style="gap:12px"><span class="eyebrow">${esc(LIVE.client || RUN.client)} · ${esc(PREVIEW.group_label)} · <span class="mono">${esc(RUN.campaign)}</span></span><h1>${title}<span class="dot">.</span></h1>
+    <p class="muted" style="max-width:62ch;font-size:16px">${lede}</p></div></div>${stageRail(n)}`;
+}
+function gate(q, sub, btn, next, done) {
+  return `<div class="gatebar"><div class="gq"><span class="eyebrow">Gate</span><b>${q}</b><span class="hint">${sub}</span></div>
+    <div class="row">${done ? `<span class="pill go">Approved</span><a class="btn" href="${next}">Next stage <span class="arr">→</span></a>` : btn}</div></div>`;
+}
+
+function liveBanner() {
+  if (LIVE.bridge === true) return "";
+  return `<div class="banner"><span class="led"></span><div><b>${LIVE.bridge === null ? "Connecting to the bridge…" : "Preview data"}</b>
+    <span class="hint">${LIVE.bridge === null ? "" : "The bridge isn't connected, so this shows sample data. Open the page in the Claude desktop app with the cymate_copy bridge set up (stages/3-copy/studio/README.md) to work on real clients."}</span></div></div>`;
+}
+function groupsPanel() {
+  return `<div class="panel ${STATE.done[1] ? "" : "hot"}"><div class="ph"><div class="t"><span class="eyebrow">PMF matrix</span><h2>Pick the group to run</h2></div><span class="hint">${LIVE.bridge ? "Sample groups for now; matrix upload comes next." : "Openers are the tests the matrix runs first."}</span></div>
+    <div class="groups">${GROUPS.map(x => `<button class="grp" type="button" data-group="${x.id}" aria-pressed="${x.id === STATE.group}">
+      <div class="row" style="justify-content:space-between"><span class="gid">${x.id}</span>${x.opener ? '<span class="pill ember">Opener</span>' : '<span class="pill plain">Later</span>'}</div>
+      <h3>${esc(x.name)}</h3><dl><dt>Industry</dt><dd>${esc(x.industry)}</dd><dt>Titles</dt><dd>${esc(x.titles)}</dd><dt>Signal</dt><dd>${esc(x.signal)}</dd><dt>Offer</dt><dd>${esc(x.offer)}</dd></dl></button>`).join("")}</div>
+  </div>`;
+}
+function viewStage1() {
+  const g = GROUPS.find(x => x.id === STATE.group);
+  const lede = "Set up the client's brain in Octave, read everything the client gave us, and pick the group to run. A typed description works for clients without a PMF matrix.";
+  if (LIVE.bridge !== true) return head(1, "Onboarding", lede) + liveBanner() + previewStage1(g);
+  const o = LIVE.octave, ready = o && (o.ready || LIVE.skipOctave), c = LIVE.ctx;
+  const ctxRows = c ? [["Company", c.company], ["Offers", (c.offers || []).join(" · ")], ["Buyers", c.buyers], ["Size", c.size], ["Region", c.region],
+    ["Proof", (c.proof || []).join(" · ")], ["Not approved", (c.not_approved || []).join(" · ")], ["Excluded", c.excluded], ["Open questions", (c.open_questions || []).join(" · ")]].filter(([, v]) => v) : [];
+  const onbCount = LIVE.onb ? Object.values(LIVE.onb).filter(v => v && (typeof v !== "object" || Object.keys(v).length)).length : 0;
+  return head(1, "Onboarding", lede) + `
+  <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Client</span><h2>${LIVE.client ? esc(LIVE.client) : "Pick a client"}</h2></div>${LIVE.busy ? `<span class="pill hold">${esc(LIVE.busy)}…</span>` : ""}</div>
+    <form class="row" id="clientform"><input class="input" id="clientpick" list="clientlist" autocomplete="off" placeholder="Client name as in Airtable" value="${esc(LIVE.client)}" style="flex:1;min-width:0;max-width:420px">
+      <datalist id="clientlist">${LIVE.clients.map(n => `<option value="${esc(n)}"></option>`).join("")}</datalist><button class="btn ${LIVE.client ? "" : "ember"}" type="submit">Load client</button></form>
+    ${LIVE.err ? `<p class="hint" style="color:var(--stop)">${esc(LIVE.err)}</p>` : ""}
+  </div>
+  ${LIVE.client && o ? octavePanel() : ""}
+  ${LIVE.client && o ? `<div class="split">
+    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Onboarding inputs</span><h2>What the client gave us</h2></div><span class="hint">${onbCount ? "Onboarding form and notes found in Airtable" : "Nothing in Airtable yet"}</span></div>
+      <div class="field"><label for="ctx">Add context</label><textarea class="input" id="ctx" placeholder="Paste PMF matrix notes, call takeaways, or describe the client if there's no matrix.">${esc(STATE.typed || "")}</textarea></div>
+      <div class="row"><button class="btn ${c ? "" : "ember"}" data-live="read" ${LIVE.sample ? "" : "disabled"}>${c ? "Read again" : "Read the onboarding inputs"}</button><span class="hint">Claude reads them with your account. Nothing is invented.</span></div></div>
+    <div class="panel"><div class="t stack" style="gap:4px"><span class="eyebrow">Client context</span><h3>${c ? esc(c.company || LIVE.client) : "Not read yet"}</h3></div>
+      ${c ? `<dl class="kv">${ctxRows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : '<p class="hint">Read the onboarding inputs to fill this in.</p>'}</div>
+  </div>` : ""}
+  ${LIVE.client && o ? groupsPanel() : ""}
+  ${LIVE.client && o ? gate(ready ? `Run ${g.id} · ${g.name} with offer ${g.offer.split(" · ")[0]}?` : "Set up the client's Octave workspace first.",
+    ready ? "This sets the list filters and the copy brief." : "Its own workspace, the framework agents and a library. Copy uses them in stage 3.",
+    ready ? `<button class="btn ember" data-act="approve1">Pick ${g.id} + offer ${g.offer.split(" · ")[0]} <span class="arr">→</span></button>`
+      : `<button class="btn ghost sm" data-live="skip">Continue without (internal test)</button><button class="btn ember" disabled>Pick the group</button>`, "#build-2", STATE.done[1]) : ""}`;
+}
+function previewStage1(g) {
+  return `
+  <div class="split">
+    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Client</span><h2>${esc(RUN.client)}</h2></div><span class="pill plain">Sample</span></div>
+      <div class="grid g2"><div class="field"><label for="client">Airtable client</label><input class="input" id="client" value="${esc(PREVIEW.airtable_row)}"></div>
+        <div class="field"><label for="cname">Campaign name</label><input class="input mono" id="cname" value="${esc(RUN.campaign)}"></div></div>
+      <div class="inputs">
+        ${PREVIEW.inputs.map(x => `<div class="src"><span class="ic ${x.on ? "on" : ""}">${esc(x.ic)}</span><div class="meta"><b>${esc(x.name)}</b><span class="sub">${esc(x.sub)}</span></div></div>`).join("")}
+        <label class="drop" for="file">+ Drop files or <u>browse</u><input id="file" type="file" hidden multiple></label>
+      </div>
+      <div class="field"><label for="ctx">Or type the context</label><textarea class="input" id="ctx" placeholder="For clients without a PMF matrix: who they sell to, the offer, proof, and what to avoid."></textarea></div>
+    </div>
+    <div class="panel"><div class="t stack" style="gap:6px"><span class="eyebrow">Client context</span><h3>${esc(PREVIEW.context_title)}</h3></div>
+      <dl class="kv">${PREVIEW.context.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${k === "Not approved" ? `<span class="pill hold">${esc(v)}</span>` : esc(v)}</dd>`).join("")}</dl>
+    </div>
+  </div>
+  ${groupsPanel()}
+  ${gate(`Run ${g.id} · ${g.name} with offer ${g.offer.split(" · ")[0]}?`, "This sets the list filters and the copy brief.", `<button class="btn ember" data-act="approve1">Pick ${g.id} + offer ${g.offer.split(" · ")[0]} <span class="arr">→</span></button>`, "#build-2", STATE.done[1])}`;
+}
+
+function viewStage2() {
+  const pull = STATE.pull, usable = Math.round(pull * 0.44);
+  const chips = (a, x) => a.map(v => `<span class="chip ${x || ""}">${esc(v)}</span>`).join("");
+  const f = PREVIEW.filters.map(([k, v, x]) => [esc(k), chips(v, x ? "x" : "")]);
+  const top = PREVIEW.funnel[0][1] || 1;
+  const bar = (k, n, cls) => `<div class="fbar"><span>${esc(k)}</span><span class="track"><span class="fill ${cls || ""}" style="width:${Math.max(2, n / top * 100)}%"></span></span><span class="c">${n}</span></div>`;
+  return head(2, "Lead list", "The AI Ark search for the chosen group. Check it in the AI Ark app, approve the pull size, and the list comes back cleaned and verified.", "step two") + `
+  <div class="split">
+    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Search · ${esc(PREVIEW.group_label)}</span><h2>Who we pull</h2></div><button class="btn sm" data-act="copypayload">Copy in-app payload</button></div>
+      <div class="filters">${f.map(([k, v]) => `<span class="k">${k}</span><div class="chips">${v}</div>`).join("")}</div>
+      <div class="payload" id="payload">${esc(JSON.stringify(PREVIEW.payload))}</div>
+      <p class="hint">In AI Ark: People Search → Search Payload → In-App Payload → paste → Apply Search. If you change filters, paste the API payload back here.</p>
+    </div>
+    <div class="stack">
+      <div class="panel ${STATE.done[2] ? "" : "hot"}"><div class="stat"><span class="v num">${RUN.count}<small>contacts match</small></span><span class="k">Free count</span></div><hr class="sep">
+        <div class="field"><label for="pull">Contacts to pull · ${pull}</label><input class="slider" id="pull" type="range" min="20" max="400" step="10" value="${pull}"></div>
+        <dl class="kv"><dt>AI Ark cost</dt><dd class="num">≈ ${pull} credits</dd><dt>Usable after cleaning</dt><dd class="num">≈ ${usable} leads (35 to 45%)</dd></dl>
+      </div>
+      <div class="panel"><span class="eyebrow">Last pull · ${RUN.pulled} contacts</span>
+        <div class="funnel">${PREVIEW.funnel.map(([k, n, c]) => bar(k, n, c)).join("")}</div>
+        <p class="hint">${esc(PREVIEW.funnel_note)}</p></div>
+    </div>
+  </div>
+  <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Verified leads</span><h2>${LEADS.length} ready for copy</h2></div><span class="pill go">AI Ark verified</span></div>
+    <div class="tbl"><table><thead><tr><th>Company</th><th>Title</th><th>Industry</th><th class="num">Staff</th></tr></thead>
+      <tbody>${LEADS.map(l => `<tr><td class="cname">${esc(l.company)}</td><td>${esc(l.title)}</td><td class="sub">${esc(l.industry)}</td><td class="num">${l.staff ?? "–"}</td></tr>`).join("")}</tbody></table></div></div>
+  ${gate(`Pull ${pull} contacts for about ${pull} AI Ark credits?`, "Nothing is spent before this yes.", `<button class="btn ember" data-act="approve2">Approve the pull <span class="arr">→</span></button>`, "#build-3", STATE.done[2])}`;
+}
+
+function sig() { return `Best regards,\n<sender first name>\n<title>\n${PREVIEW.website}`; }
+function leadKind(x) { return x.src !== "agent" ? "fallback" : (x.qa && x.qa.length ? "check" : "agent"); }
+function viewStage3() {
+  const filt = STATE.filter || "all";
+  const shown = LEADS.map((x, i) => [x, i]).filter(([x]) => filt === "all" || leadKind(x) === filt);
+  if (!shown.some(([, i]) => i === STATE.lead) && shown.length) STATE.lead = shown[0][1];
+  const l = LEADS[STATE.lead] || LEADS[0];
+  const count = k => LEADS.filter(x => leadKind(x) === k).length;
+  const agent = count("agent") + count("check"), fb = count("fallback");
+  const read = new Set(STATE.read || []); read.add(STATE.lead); STATE.read = [...read];
+  const step = !STATE.csm ? 1 : !STATE.sent ? 2 : !STATE.client ? 3 : 4;
+  const STEPS = [
+    ["Approve examples", "Read at least 5 emails", "csm", `Approve examples`, read.size < 5 ? `Read ${5 - read.size} more` : ""],
+    ["Send to the client", "Clean review page", "send", "Create client review", ""],
+    ["Client approves", `Round ${STATE.round}`, "clientok", "Mark approved", ""],
+    ["Write every lead", "Free for approved tests", null, null, ""]];
+  const cur = STEPS[step - 1];
+  const canAct = !(step === 1 && read.size < 5);
+  const kindLabel = { agent: '<span class="pill go">Personalized</span>', check: '<span class="pill hold">Check</span>', fallback: '<span class="pill">Fallback</span>' };
+  const tab = (k, lbl, n) => `<button class="tab" data-filter="${k}" aria-pressed="${filt === k}">${lbl}<span class="num">${n}</span></button>`;
+  return head(3, "Copy", "Each lead's email is written by the Octave agent from one brief and checked before you see it. Read, approve, send to the client.") + `
+  <section class="track" aria-label="Approval">
+    <ol>${STEPS.map((s, i) => `<li class="${step > i + 1 ? "done" : step === i + 1 ? "now" : ""}"><span class="dotn">${step > i + 1 ? "✓" : i + 1}</span><span><b>${s[0]}</b><span class="hint">${s[1]}</span></span></li>`).join("")}</ol>
+    <div class="track-act">${step < 4 && cur[2] ? `<button class="btn ember" data-act="${cur[2]}" ${canAct ? "" : "disabled"}>${cur[3]}</button>${cur[4] ? `<span class="hint">${cur[4]}</span>` : ""}`
+      : '<span class="pill go">Copy approved</span><a class="btn" href="#build-4">Continue to campaign <span class="arr">→</span></a>'}</div>
+    ${step === 3 ? `<form class="row fbrow" id="fbform"><input class="input" id="fb" placeholder="Client asked for changes? Paste their feedback to start round ${STATE.round + 1}" style="flex:1;min-width:0"><button class="btn sm" type="submit">Log feedback</button></form>` : ""}
+  </section>
+
+  <section class="reader">
+    <div class="ph"><div class="t"><h2>Read before you approve</h2><span class="hint">${agent} personalized · ${fb} fallback · ${read.size} of ${LEADS.length} read</span></div>
+      <div class="tabs" role="group" aria-label="Filter emails">${tab("all", "All", LEADS.length)}${tab("agent", "Personalized", count("agent"))}${count("check") ? tab("check", "Check", count("check")) : ""}${tab("fallback", "Fallback", fb)}</div></div>
+    <div class="readgrid">
+      <div class="leadlist" role="list">${shown.map(([x, i]) => `<button class="lead-i" role="listitem" data-lead="${i}" aria-current="${i === STATE.lead}">
+        <b>${esc(x.company)}</b>${read.has(i) && i !== STATE.lead ? '<span class="seen" title="Read">✓</span>' : "<span></span>"}<span class="sub">${esc(x.first)} · ${esc(x.title)}</span></button>`).join("")}</div>
+      <article class="stack" style="gap:18px">
+        <div class="row" style="justify-content:space-between"><div class="row">${kindLabel[leadKind(l)]}<span class="hint">${esc(l.company)} · ${esc(l.industry || "")}</span></div>
+          <div class="row"><button class="btn sm ghost" data-act="prev" aria-label="Previous email">←</button><span class="hint num">${shown.findIndex(([, i]) => i === STATE.lead) + 1} / ${shown.length}</span><button class="btn sm ghost" data-act="next" aria-label="Next email">→</button></div></div>
+        <div class="mail"><div class="mh"><span>To</span><span>${esc(l.first)} · ${esc(l.title)}, ${esc(l.company)}</span><span>Subject</span><span>${esc(l.subject)}</span></div>
+          <div class="mb">${esc(l.email)}<div class="sig">${esc(sig())}</div></div></div>
+        ${l.src === "agent" ? `<div class="fact"><span class="eyebrow">Why this opening</span><span>${esc(l.fact)}</span>${l.url ? `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.url.replace(/^https?:\/\//, "").slice(0, 80))}</a>` : ""}</div>`
+          : `<div class="fact"><span class="eyebrow">Why the fallback</span><span class="muted">${l.qa && l.qa.length ? esc(l.qa[0].replace(/^fact is about '([^']+)', not (.+)$/, (_, a, b) => `The agent's fact was about ${a.replace(/(^|\s)\S/g, c => c.toUpperCase())}, not ${b}, so the standard email goes out.`)) : "The agent wasn't confident, so the standard email goes out."}</span></div>`}
+        <div class="row"><button class="btn sm" data-act="rewrite">Rewrite this email</button><button class="btn sm ghost" data-act="options">Show 3 options</button></div>
+      </article>
+    </div>
+  </section>
+
+  <details class="fold"><summary><span><b>Framework · ${esc(PREVIEW.framework)}</b><span class="hint">${esc(PREVIEW.framework_why)}</span></span><span class="hint">Why</span></summary>
+    <div class="considered">${PREVIEW.not_used.map(t => `<div><span class="pill stop">Not used</span><span>${esc(t)}</span></div>`).join("")}</div></details>
+  <details class="fold"><summary><span><b>Campaign brief</b><span class="hint">The only source of truth. The agent can't use anything outside it.</span></span><span class="hint">Open</span></summary>
+    <dl class="brief">${PREVIEW.brief.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    <div class="row"><button class="btn sm" data-act="editbrief">Edit brief</button><span class="hint">Editing the brief starts a new test of 8 emails.</span></div></details>
+  <details class="fold"><summary><span><b>Ask Copy Studio</b><span class="hint">Change a line, the tone, or one lead's email in plain words.</span></span><span class="hint">Open</span></summary>
+    <div class="chat" id="chat">${STATE.chat.map(m => `<div class="msg ${m.me ? "me" : ""}">${esc(m.t)}</div>`).join("")}</div>
+    <form class="row" id="chatform"><input class="input" id="chatin" placeholder="${esc(PREVIEW.chat_placeholder)}" style="flex:1;min-width:0"><button class="btn sm ember" type="submit">Send</button></form></details>`;
+}
+
+function viewStage4() {
+  const PASS = ["Name prefix matches reply-agent type", "Schedule: LA time, Mon to Fri, 31 min apart", "≥ 444 new leads per day", "Open and click tracking off, plain text", "30% follow ups / 70% new leads", "Stop on reply", "Signature in every email", "HTML clean, no links", "Every lead has every variable", "Goal subsequence planned"];
+  const WARN = ["Fewer than 2 spintax blocks per email", "Warmup status: check in Smartlead"];
+  const TODO = ["Upload client blocklist to the global block list", "Turn on 'restart AI-categorised OOO' (campaign + subsequence)", "Connect the reply-agent webhook", "Send a test email to yourself", "Peer review ticket: Campaign Setup Review"];
+  const doneTodos = TODO.filter((_, i) => STATE.todos[i]).length;
+  const l = LEADS[Math.min(6, LEADS.length - 1)];
+  return head(4, "Campaign", "The approved copy goes to the campaign builder, which sets every SOP setting, creates the goal subsequence for the reply agent and checks the result. It stays a draft until you start it.", "last step") + `
+  <div class="split">
+    <div class="panel"><div class="ph"><div class="t"><span class="eyebrow">Smartlead plan</span><h2>Draft campaign</h2></div><span class="pill hold">Not built</span></div>
+      <dl class="kv"><dt>Name</dt><dd class="mono">${esc(RUN.campaign)}</dd><dt>Type</dt><dd>ColdOutreach · reply agent</dd>
+        <dt>Mailboxes</dt><dd><input class="input" id="mb" placeholder="Live campaign ID to copy mailboxes from" style="max-width:340px"></dd>
+        <dt>Subsequence</dt><dd><input class="input" id="ss" placeholder="Existing ColdOutreach_Subsequence ID" style="max-width:340px"></dd>
+        <dt>Sequence</dt><dd>Email 1 per lead + follow ups at day 3 and day 7, same thread</dd><dt>Schedule</dt><dd>Next business day · 08:00 to 16:00 LA · 444 per day</dd><dt>Leads</dt><dd class="num">${LEADS.length} ready</dd></dl>
+      <span class="eyebrow">Email 1 preview</span>
+      <div class="mail"><div class="mh"><span>To</span><span>${esc(l.first)}, ${esc(l.company)}</span><span>Subject</span><span>${esc(l.subject)}</span></div><div class="mb">${esc(l.email)}<div class="sig">${esc(sig())}</div></div></div>
+    </div>
+    <div class="stack"><div class="panel"><span class="eyebrow">SOP checklist · dry run</span><div class="checks">
+        ${PASS.map(t => `<div class="ck"><span class="r PASS">PASS</span><span>${t}</span></div>`).join("")}${WARN.map(t => `<div class="ck"><span class="r WARN">WARN</span><span>${t}</span></div>`).join("")}</div></div>
+      <div class="panel"><div class="ph"><span class="eyebrow">Handoff · by hand</span><span class="hint num">${doneTodos}/${TODO.length}</span></div><div class="checks">
+        ${TODO.map((t, i) => `<div class="ck"><span class="r TODO">TODO</span><label><input type="checkbox" data-todo="${i}" ${STATE.todos[i] ? "checked" : ""}>${t}</label></div>`).join("")}</div></div></div>
+  </div>
+  ${gate("Build the draft in Smartlead?", "The campaign and its subsequence are created as drafts. Starting them stays a person's decision.", `<button class="btn ember" data-act="build" ${STATE.client ? "" : "disabled title=\"Needs the client's approval in stage 3\""}>Build draft <span class="arr">↗</span></button>`, "#campaigns", STATE.done[4])}`;
+}
+
+function viewPlaybook() {
+  const F = [["TFKD", "Medium", "Default when nothing else fits; buyer may not see the problem yet."], ["Talking To Other Folks", "Medium", "Same pain across a niche, with a case study from it."], ["2 Sentence Pain Focus", "Short", "Get a reply before pitching. No claim, no CTA."], ["Poke The Bear", "Short", "Buyer doesn't know they have the problem, no signal."], ["Standard Go-To", "Long", "Broad campaigns; full story with proof and a P.S."]];
+  return `<div class="stack" style="gap:8px"><h1>Frameworks<span class="dot">.</span></h1><p class="muted" style="max-width:66ch">One framework per campaign, picked from the group, the offer and the signal. Each one is an Octave template agent that writes the whole email from the brief.</p></div>
+  <div class="grid g3">${F.map(([n, len, why]) => `<div class="panel"><div class="row" style="justify-content:space-between"><span class="eyebrow">${len}</span><span class="pill plain">Octave agent</span></div><h2>${n}</h2><p class="muted">${why}</p></div>`).join("")}</div>`;
+}
+
+/* ---------- router ---------- */
+function render() {
+  const h = (location.hash || "#campaigns").slice(1);
+  const m = /^build-([1-4])$/.exec(h);
+  const view = m ? ["", viewStage1, viewStage2, viewStage3, viewStage4][+m[1]] : h === "playbook" ? viewPlaybook : viewCampaigns;
+  $("main").innerHTML = `<div class="wrap">${view()}</div>`;
+  document.querySelectorAll("[data-nav]").forEach(a => a.setAttribute("aria-current", (m ? "build" : h === "playbook" ? "playbook" : "campaigns") === a.dataset.nav ? "page" : "false"));
+  bind();
+}
+function bind() {
+  document.querySelectorAll("[data-go]").forEach(r => r.onclick = () => location.hash = r.dataset.go);
+  document.querySelectorAll("[data-group]").forEach(b => b.onclick = () => { STATE.group = b.dataset.group; persist(); render(); });
+  document.querySelectorAll("[data-lead]").forEach(b => b.onclick = () => { STATE.lead = +b.dataset.lead; persist(); render(); });
+  document.querySelectorAll("[data-todo]").forEach(c => c.onchange = () => { STATE.todos[c.dataset.todo] = c.checked; persist(); render(); });
+  const pull = $("pull"); if (pull) pull.oninput = () => { STATE.pull = +pull.value; persist(); render(); $("pull").focus(); };
+  const cf = $("chatform"); if (cf) cf.onsubmit = e => { e.preventDefault(); const t = $("chatin").value.trim(); if (!t) return;
+    STATE.chat.push({ me: true, t }, { me: false, t: "In the live version this goes to Copy Studio, which rewrites the copy and shows the change for approval." }); persist(); render(); };
+  document.querySelectorAll("[data-act]").forEach(b => b.onclick = () => act(b.dataset.act));
+  document.querySelectorAll("[data-filter]").forEach(b => b.onclick = () => { STATE.filter = b.dataset.filter; persist(); render(); });
+  const cfm = $("clientform"); if (cfm) cfm.onsubmit = e => { e.preventDefault(); const v = $("clientpick").value.trim(); if (v) loadClient(v); };
+  const ctx = $("ctx"); if (ctx) ctx.oninput = () => { STATE.typed = ctx.value; persist(); };
+  document.querySelectorAll("[data-pick]").forEach(c => c.onchange = () => { LIVE.picked[c.dataset.pick] = c.checked; render(); });
+  document.querySelectorAll("[data-live]").forEach(b => b.onclick = () => ({ copy: copyAgents, propose: proposeLibrary, send: sendLibrary, read: readOnboarding,
+    recheck: () => loadClient(LIVE.client), skip: () => { LIVE.skipOctave = true; render(); } })[b.dataset.live]());
+  const bs = $("bridgeStatus"); if (bs) { bs.querySelector(".led").style.background = LIVE.bridge ? "var(--go)" : "var(--hold)";
+    bs.querySelector("span:last-child").textContent = LIVE.bridge ? "Bridge connected" : LIVE.bridge === null ? "Bridge: connecting…" : "Preview data"; }
+  const fbf = $("fbform"); if (fbf) fbf.onsubmit = e => { e.preventDefault(); act("feedback"); };
+}
+function act(a) {
+  if (a === "approve1") { STATE.done[1] = true; toast("Group picked: list filters and brief set"); }
+  if (a === "approve2") { STATE.done[2] = true; toast("Pull approved"); }
+  if (a === "csm") { STATE.csm = true; toast("Examples approved by the CSM"); }
+  if (a === "send") { STATE.sent = true; toast("Client review page created"); }
+  if (a === "clientok") { STATE.client = true; STATE.done[3] = true; toast("Client approved the copy"); }
+  if (a === "feedback") { const v = ($("fb") || {}).value; if (!v) { toast("Paste the feedback first"); return; } STATE.round++; STATE.csm = STATE.sent = false; toast(`Feedback logged: round ${STATE.round} starts`); }
+  if (a === "prev" || a === "next") {
+    const f = STATE.filter || "all", ids = LEADS.map((x, i) => [x, i]).filter(([x]) => f === "all" || leadKind(x) === f).map(([, i]) => i);
+    const k = ids.indexOf(STATE.lead); STATE.lead = ids[(k + (a === "next" ? 1 : -1) + ids.length) % ids.length]; persist(); render(); return; }
+  if (a === "build") { STATE.done[4] = true; toast("Draft built in Smartlead (preview)"); }
+  if (a === "copypayload") { const t = $("payload").textContent; try { navigator.clipboard.writeText(t).then(() => toast("Payload copied"), () => sel()); } catch { sel(); } return; }
+  if (["rewrite", "options", "editbrief"].includes(a)) { toast("Connects to Copy Studio in the live version"); return; }
+  persist(); render();
+}
+function sel() { const r = document.createRange(); r.selectNodeContents($("payload")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Selected: press Ctrl+C"); }
+document.addEventListener("keydown", e => { if (location.hash !== "#build-3" || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if (e.key === "ArrowRight" || e.key === "j") act("next"); if (e.key === "ArrowLeft" || e.key === "k") act("prev"); });
+window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
+render();
+bootLive();
+</script>
