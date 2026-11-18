@@ -38,7 +38,7 @@ config.json                     Airtable fields, Octave agent ids, gateways (no 
 lib/                            common.py (HTTP, Airtable keys, run state, signature), check_setup.py
 stages/1-onboarding/            client context template
 stages/2-lead-list/             AI Ark payload + pull, Smartlead export, clean, email waterfall, tests
-stages/3-copy/                  octave_copy.py, approvals.py, frameworks reference
+stages/3-copy/                  octave_copy.py, approvals.py, frameworks reference, studio/ (Copy Studio artifact + local bridge)
 stages/4-campaign/              export_for_builder.py (inputs for the campaign-builder skill)
 .claude/skills/                 one skill per stage + campaign-pipeline (all stages)
 tests/test_offline.py           whole-pipeline simulation
