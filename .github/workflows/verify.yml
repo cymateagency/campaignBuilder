@@ -18,3 +18,5 @@ jobs:
         run: python stages/2-lead-list/tests/test_payload.py
       - name: Offline simulation of every stage (fake APIs, no keys, no credits)
         run: python tests/test_offline.py
+      - name: Bridge Octave workspace setup (faked Octave, no keys)
+        run: python tests/test_bridge_octave.py
