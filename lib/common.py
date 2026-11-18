@@ -234,11 +234,11 @@ def set_stage(d, stage, **info):
 
 
 # ---- email signature (Cymate format, as in the live client campaigns) ----
-NO_LINK_DOT = "․"  # one dot leader: looks like "." but email clients don't turn clear-tech.com into a link
+NO_LINK_DOT = "․"  # one dot leader: looks like "." but email clients don't turn example.com into a link
 
 
 def signature_parts(spec):
-    """campaign_spec.json "signature": {"closers": [...], "titles": [...], "website": "clear-tech.com"}."""
+    """campaign_spec.json "signature": {"closers": [...], "titles": [...], "website": "example.com"}."""
     sig = spec.get("signature") or {}
     closers = [c for c in sig.get("closers") or [] if c.strip()]
     titles = [t for t in sig.get("titles") or [] if t.strip()]
@@ -246,7 +246,7 @@ def signature_parts(spec):
     missing = [k for k, v in (("closers", closers), ("titles", titles), ("website", website)) if not v]
     if missing:
         sys.exit(f'campaign_spec.json "signature" is missing {missing}. Example: {{"closers": ["Appreciate it", "Best regards", "Thanks"], '
-                 '"titles": ["Client Partner"], "website": "clear-tech.com"}')
+                 '"titles": ["Client Partner"], "website": "example.com"}')
     return closers, titles, website
 
 
