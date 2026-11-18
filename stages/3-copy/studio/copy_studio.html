@@ -1,0 +1,780 @@
+<title>Cymate Copy Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one column that reads top to bottom like the stage 3 run: your brief in, then the framework and why, then the copy, then iterations. */
+:root{
+  --bg:#F3F5F6; --panel:#FFFFFF; --sunk:#EAEEF0; --ink:#15212A; --muted:#5A6873; --line:#D9E0E4;
+  --accent:#0E6B70; --accent-ink:#FFFFFF; --accent-soft:#DCEFEF;
+  --good:#2D7A4C; --good-soft:#E0F1E6; --warn:#9A6411; --warn-soft:#F7EBD3; --bad:#A53A2A; --bad-soft:#F6E0DB;
+  --f-display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1519; --panel:#161E23; --sunk:#1C262C; --ink:#E4EBEE; --muted:#93A3AD; --line:#2A363D;
+  --accent:#4DB6BB; --accent-ink:#0B1A1C; --accent-soft:#183539;
+  --good:#6CC793; --good-soft:#163024; --warn:#E0AE57; --warn-soft:#33281A; --bad:#EE8C7B; --bad-soft:#3A1E19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1519; --panel:#161E23; --sunk:#1C262C; --ink:#E4EBEE; --muted:#93A3AD; --line:#2A363D;
+  --accent:#4DB6BB; --accent-ink:#0B1A1C; --accent-soft:#183539;
+  --good:#6CC793; --good-soft:#163024; --warn:#E0AE57; --warn-soft:#33281A; --bad:#EE8C7B; --bad-soft:#3A1E19; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:14px/1.55 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header.top{display:flex;align-items:baseline;gap:10px;padding-block:18px 4px;flex-wrap:wrap}
+header.top h1{font-size:22px;letter-spacing:-.01em}
+.tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.save{margin-left:auto;font-size:12px;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.panel h2{font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.step{font-family:var(--f-mono);font-size:11px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 5px;line-height:18px}
+label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin:12px 0 4px}
+label:first-of-type{margin-top:0}
+input[type=text],select,textarea{width:100%;background:var(--sunk);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0}
+textarea{resize:vertical;line-height:1.55}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{min-width:0}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.55;cursor:default}
+.hint,.note{font-size:12.5px;color:var(--muted)}
+.err{color:var(--bad);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;line-height:20px;padding:0 8px;border-radius:999px;background:var(--sunk);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.chip.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.chip.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.spin{width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:sp .8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.banner{border:1px solid var(--warn);background:var(--warn-soft);border-radius:var(--r);padding:12px 14px}
+.banner code{font-family:var(--f-mono);font-size:12px;background:var(--panel);padding:1px 5px;border-radius:4px;word-break:break-all}
+
+.progress{display:flex;flex-direction:column;gap:6px}
+.progress div{display:flex;gap:8px;align-items:center;font-size:13px}
+.progress .ok::before{content:"✓";color:var(--good);font-weight:600;width:12px;display:inline-block}
+.progress .no::before{content:"–";color:var(--warn);font-weight:600;width:12px;display:inline-block}
+
+.fw{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.fwname{font-family:var(--f-display);font-size:22px;font-weight:600}
+.fwslot{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.why{font-size:14px}
+.alts{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.alts b{color:var(--ink);font-weight:500}
+ul.tight{margin:4px 0 0;padding-left:18px}
+ul.tight li{margin:2px 0}
+details{border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+details summary{cursor:pointer;font-weight:500;font-size:13px}
+pre.brief{white-space:pre-wrap;font-family:var(--f-mono);font-size:12.5px;background:var(--sunk);padding:10px 12px;border-radius:6px;margin:8px 0 0;overflow-wrap:anywhere}
+
+.versions{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.vbtn{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);background:var(--sunk);border-radius:4px;padding:0 7px;line-height:22px;cursor:pointer;color:var(--muted)}
+.vbtn[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.vnote{font-size:12.5px;color:var(--muted);font-style:italic}
+.mail{border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:10px}
+.mail .mh{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 10px;background:var(--sunk);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.mail .mh b{font-size:12.5px}
+.mail .subj{border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--panel);font-weight:600}
+.mail textarea.body{border:none;border-radius:0;background:var(--panel);min-height:150px;font-size:14px}
+.mail .mf{padding:7px 10px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line);align-items:center}
+.meter{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);margin-right:4px}
+.meter .over{color:var(--bad)}
+.iter{display:flex;flex-direction:column;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--sunk);white-space:pre-wrap;font-size:13.5px}
+.opt .small{font-size:12px;color:var(--muted);white-space:normal;margin-bottom:4px}
+.tests{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:10px;margin-top:10px}
+.test{border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.test pre{white-space:pre-wrap;font-family:var(--f-body);font-size:13px;margin:0;overflow-wrap:anywhere}
+.fact{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.ctx{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px;font-size:13px}
+.ctx h3{font-size:12.5px;margin-bottom:4px}
+.fwgrid,.vargrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:12px}
+.fwcard{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.fwcard .fwname{font-size:17px}
+.len{font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.06em;padding:0 7px;line-height:20px;border-radius:4px;color:var(--accent-ink)}
+.len-short{background:var(--warn)}
+.len-medium{background:var(--accent)}
+.len-long{background:var(--good)}
+.variant{border:1px solid var(--line);border-radius:var(--r);min-width:0;display:flex;flex-direction:column}
+.variant .mail{margin:10px 10px 0}
+.vhead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--line)}
+.vhead select{width:auto;margin-left:auto;padding:3px 6px;font-size:12.5px}
+.vfoot{display:flex;flex-direction:column;gap:8px;padding:10px;margin-top:auto}
+.wrap{max-width:1180px}
+details.fold{padding:0}
+details.fold>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--f-display);font-weight:600;font-size:15px}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"Show";margin-left:auto;font-family:var(--f-body);font-weight:500;font-size:12.5px;color:var(--accent)}
+details.fold[open]>summary::after{content:"Hide"}
+details.fold>summary .note{font-family:var(--f-body);font-weight:400}
+details.fold>.inner{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+.fields{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:0}
+.fields>div{display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.fields>div:last-child{border-bottom:none}
+.fields dt{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;padding-top:2px}
+.fields dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+@media (max-width:600px){.fields>div{grid-template-columns:minmax(0,1fr);gap:2px}}
+.pers{margin:10px 10px 0;border:1px dashed var(--accent);border-radius:6px;padding:9px 11px;font-size:13px;background:var(--accent-soft)}
+.pers code{font-family:var(--f-mono);font-size:12px}
+.pers .ex{margin-top:6px;white-space:pre-wrap}
+.chatlog{display:flex;flex-direction:column;gap:8px;max-height:460px;overflow-y:auto;margin-bottom:10px}
+.msg{padding:9px 12px;border-radius:8px;white-space:pre-wrap;font-size:13.5px;max-width:85%;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
+.msg.ai{align-self:flex-start;background:var(--sunk);border:1px solid var(--line)}
+.agentblock{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:6px;padding:10px}
+details.pers>summary{cursor:pointer}
+.msg .applied{display:block;margin-top:6px;font-size:12px;color:var(--good)}
+</style>
+
+<div class="wrap">
+  <header class="top"><h1>Copy Studio</h1><span class="tag">Cymate · stage 3 copy</span><span class="save" id="save" aria-live="polite"></span></header>
+
+  <div id="bridgeBanner" class="banner" hidden>
+    <b>The Cymate Copy bridge isn't connected.</b> <span class="note">Octave, Smartlead and the template agents run through a local server on your laptop. Open this page in the Claude desktop app with <code>cymate_copy</code> in its local MCP servers. Claude can still write copy from your brief alone.</span>
+  </div>
+
+  <section class="panel">
+    <h2><span class="step">1</span>Your campaign</h2>
+    <label for="client">Client (as in Airtable)</label>
+    <input type="text" id="client" list="clientlist" autocomplete="off" placeholder="e.g. CipherData">
+    <datalist id="clientlist"></datalist>
+    <label for="ask">Brief: the campaign you want to run</label>
+    <textarea id="ask" rows="6" placeholder="e.g. Security leaders at US fintechs (200 to 2,000 employees). Offer: the AI SOC analyst on top of their SIEM and EDR. Goal: book a meeting. They just did Black Hat, use the under 5 minute response proof."></textarea>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="go">Build the copy</button><span class="note" id="goNote"></span></div>
+    <div class="progress" id="progress" style="margin-top:10px"></div>
+  </section>
+
+  <section class="panel" id="fwPanel" hidden></section>
+  <details class="panel fold" id="srcPanel" hidden></details>
+  <details class="panel fold" id="agentPanel" hidden></details>
+  <section class="panel" id="copyPanel" hidden></section>
+  <section class="panel" id="testPanel" hidden></section>
+  <section class="panel" id="chatPanel" hidden></section>
+</div>
+
+<script>
+(() => {
+const BR = "host:cymate_copy";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const slug = s => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "untitled";
+/* framework -> [name, length tag]. The tag is what the copy is labeled with. */
+const FW = { TWO_SENTENCE_PAIN: ["2 Sentence Pain Focus", "SHORT"], POKE_THE_BEAR: ["Poke The Bear", "SHORT"],
+             TFKD: ["TFKD (Think, Feel, Know, Do)", "MEDIUM"], TALKING_TO_OTHER_FOLKS: ["Talking To Other Folks", "MEDIUM"],
+             STANDARD_GO_TO: ["Standard Go-To", "LONG"] };
+const LIMIT = { SHORT: 60, MEDIUM: 110, LONG: 110 };
+const tagOf = fw => FW[fw]?.[1] || "MEDIUM";
+let mcp = null, sample = null, db = null, bridgeOk = null, rules = null;
+let S = blank("");
+function blank(client) { return { client, ask: "", ctx: null, plan: null, variants: [], tests: [], chat: [], updated: 0 }; }
+
+/* ---------- capabilities ---------- */
+async function boot() {
+  const [m, s, d] = await Promise.all(["mcp", "sample", "db"].map(n => claude.use(n).catch(() => null)));
+  mcp = m; sample = s; db = d;
+  if (!sample) $("goNote").innerHTML = `<span class="err">Claude isn't available on this page. Allow it in the artifact's Permissions menu.</span>`;
+  if (!mcp) setBridge(false); else loadClients();
+  let last = null; try { last = localStorage.getItem("studio:last"); } catch {}
+  if (last) { $("client").value = last; await loadStudio(last); }
+}
+function setBridge(ok) { bridgeOk = ok; $("bridgeBanner").hidden = ok !== false; }
+async function bridge(tool, input) {
+  if (!mcp) throw { code: "server_not_connected" };
+  try { const r = await mcp.callTool(BR, tool, input || {}, { cache: false }); setBridge(true); return r.payload; }
+  catch (e) { if (["server_not_connected", "not_granted", "capability_disabled", "server_not_found"].includes(e.code)) setBridge(false); throw e; }
+}
+function errText(e) {
+  const m = { server_not_connected: "The Cymate Copy bridge isn't running in this Claude app.", not_in_manifest: "This page isn't allowed to use the bridge. Allow it in the artifact's Permissions menu.",
+    not_granted: "Claude isn't allowed for this page. Allow it in the artifact's Permissions menu.", rate_limited: "Too many Claude calls right now. Try again in a minute.",
+    invalid_json: "Claude's answer came back in the wrong format. Try again.", server_unavailable: "The bridge didn't answer in time. Try again.", cancelled: "Cancelled." };
+  if (!e) return "Unknown error";
+  if (e.code === "tool_error") return e.message || "The bridge reported an error.";
+  return m[e.code] || e.message || String(e);
+}
+async function loadClients() {
+  try { const r = await bridge("list_clients"); $("clientlist").innerHTML = (r.clients || []).map(c => `<option value="${esc(c)}">`).join(""); } catch {}
+}
+
+/* ---------- persistence: one document per client ---------- */
+let saveTimer = null;
+function touch() { S.updated = Date.now(); clearTimeout(saveTimer); saveTimer = setTimeout(save, 1000); $("save").textContent = "Unsaved changes"; }
+async function save() {
+  if (!S.client) return;
+  const body = JSON.parse(JSON.stringify(S));
+  body.variants = body.variants.map(v => ({ ...v, options: undefined, versions: v.versions.slice(-12), current: Math.min(v.current, Math.min(v.versions.length, 12) - 1) }));
+  try { localStorage.setItem("studio:last", S.client); localStorage.setItem("studio:" + slug(S.client), JSON.stringify(body)); } catch {}
+  if (db) { try { await db.doc("studios/" + slug(S.client)).set(body); $("save").textContent = "Saved"; } catch { $("save").textContent = "Saved on this device"; } }
+  else $("save").textContent = "Saved on this device";
+}
+function migrate(d) {  // older saves held one sequence in d.versions
+  if (d && !d.variants && d.versions?.length) {
+    const fw = d.versions[d.current || 0].framework || "TFKD";
+    d.variants = [{ tag: tagOf(fw), framework: fw, why: d.plan?.why || "", versions: d.versions, current: d.current || 0 }];
+  }
+  return d;
+}
+async function loadStudio(client) {
+  let data = null;
+  if (db) { try { const d = await db.doc("studios/" + slug(client)).get(); if (d.exists) data = d.data(); } catch {} }
+  if (!data) { try { const t = localStorage.getItem("studio:" + slug(client)); if (t) data = JSON.parse(t); } catch {} }
+  data = migrate(data ? JSON.parse(JSON.stringify(data)) : null);
+  S = Object.assign(blank(client), data && data.variants ? data : {}, { client });
+  delete S.versions; delete S.current;
+  $("ask").value = S.ask || ""; $("progress").innerHTML = "";
+  renderAll();
+}
+$("client").addEventListener("change", () => { const c = $("client").value.trim(); if (c && c !== S.client) loadStudio(c); });
+$("ask").addEventListener("input", () => { S.ask = $("ask").value; touch(); });
+
+/* ---------- the run ---------- */
+function prog(key, state, text) {
+  let el = document.querySelector(`[data-p="${key}"]`);
+  if (!el) { el = document.createElement("div"); el.dataset.p = key; $("progress").append(el); }
+  el.className = state === "ok" ? "ok" : state === "no" ? "no" : "";
+  el.innerHTML = (state === "run" ? `<span class="spin"></span> ` : "") + esc(text);
+}
+$("go").onclick = async () => {
+  const client = $("client").value.trim(), ask = $("ask").value.trim();
+  if (!client) { $("client").focus(); return; }
+  if (!ask) { $("ask").focus(); return; }
+  if (!sample) return;
+  if (client !== S.client) await loadStudio(client);
+  S.ask = ask; $("ask").value = ask;
+  const b = $("go"); b.disabled = true; $("progress").innerHTML = ""; $("goNote").textContent = "";
+  try {
+    S.ctx = await gather();
+    prog("fw", "run", "Choosing the frameworks and writing the brief");
+    S.plan = await planVariants();
+    prog("fw", "ok", "Variants: " + S.plan.variants.map(v => `${v.tag} (${FW[v.framework][0]})`).join(" + "));
+    S.variants = S.plan.variants.map(v => ({ tag: v.tag, framework: v.framework, why: v.why, versions: [], current: 0 }));
+    renderAll(); touch();
+    prog("copy", "run", `Writing ${S.variants.length} variants`);
+    const done = await Promise.allSettled(S.variants.map(async v => {
+      const c = await writeCopy(v, "");
+      v.versions.push({ ...c, by: "First draft", at: Date.now() }); v.current = 0; renderCopy();
+    }));
+    prog("agent", "run", "Writing the Octave agent instructions for each variant");
+    const ag = await Promise.allSettled(S.variants.map(v => buildAgentInstructions(v)));
+    prog("agent", ag.some(a => a.status === "rejected") ? "no" : "ok", ag.some(a => a.status === "rejected") ? "Agent instructions: " + errText(ag.find(a => a.status === "rejected").reason) : "Octave agent instructions ready");
+    renderAgent(); touch();
+    const failed = done.filter(d => d.status === "rejected");
+    prog("copy", failed.length ? "no" : "ok", failed.length ? `${S.variants.length - failed.length} of ${S.variants.length} written: ${errText(failed[0].reason)}` : `${S.variants.length} variants written`);
+    renderAll(); touch();
+    $("fwPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) { $("goNote").innerHTML = `<span class="err">${esc(errText(e))}</span>`; }
+  finally { b.disabled = false; }
+};
+
+async function gather() {
+  const ctx = { octave: null, learn: null, onb: null };
+  if (bridgeOk === false || !mcp) { prog("oct", "no", "Octave and Smartlead skipped: the bridge isn't connected"); return ctx; }
+  prog("oct", "run", `Reading ${S.client} in Octave`);
+  prog("sl", "run", `Reading ${S.client}'s Smartlead campaigns`);
+  const [o, l, n] = await Promise.allSettled([
+    bridge("octave_context", { client: S.client, query: S.ask.slice(0, 300) }),
+    bridge("smartlead_learnings", { client: S.client, top: 3, scan: 30 }),
+    bridge("onboarding_context", { client: S.client, transcripts: 1 }),
+  ]);
+  if (o.status === "fulfilled") { ctx.octave = o.value; const n2 = Object.values(o.value.library || {}).reduce((a, b) => a + b.length, 0); prog("oct", "ok", `Octave: ${o.value.source}, ${n2} library entries${o.value.search ? " + search" : ""}`); }
+  else prog("oct", "no", "Octave: " + errText(o.reason));
+  if (l.status === "fulfilled") { ctx.learn = l.value; prog("sl", l.value.campaigns_with_100_plus_sent ? "ok" : "no", l.value.campaigns_with_100_plus_sent ? `Smartlead: ${l.value.campaigns_with_100_plus_sent} sent campaigns ranked by positive replies` : "Smartlead: " + (l.value.message || "no sent campaigns yet")); }
+  else prog("sl", "no", "Smartlead: " + errText(l.reason));
+  if (n.status === "fulfilled") ctx.onb = n.value;
+  return ctx;
+}
+async function getRules() {
+  if (rules) return rules;
+  try { rules = (await bridge("copy_rules")).frameworks_md; } catch { rules = FALLBACK_RULES; }
+  return rules;
+}
+const FALLBACK_RULES = `How to pick: 1 signal campaign: matching signal copy. 3 buyer unaware of the problem: TFKD (MEDIUM), Poke The Bear (SHORT_B). 4 same pain across a niche: Talking To Other Folks (MEDIUM), 2 Sentence Pain Focus (SHORT). 9 default: TFKD, with Standard Go-To as the LONG.
+House style: plain text, no hyphens or dashes, no intensifiers, lowercase subject lines, no links in Email 1, reply-for-link soft CTA, below 6th-grade reading level, no compliment openers, say plainly what the client is and the outcome, under 110 words, sentences under 25 words, start "Hey {{first_name}},".
+TFKD: since you're <recent fact>, I'm curious if <poke-the-bear question>? / This is difficult because <pain>. / <Client> helps <outcome> using <mechanism>, <risk reduction>. / <soft CTA>.
+2 Sentence Pain Focus: two sentences, get a reply before pitching, no claim, no CTA.`;
+
+function octaveText(O) {
+  if (!O) return "(none)";
+  const comp = O.company ? (typeof O.company === "string" ? O.company : JSON.stringify(O.company)).slice(0, 3000) : "";
+  let t = `Source: ${O.source}\n` + (comp ? "COMPANY: " + comp + "\n" : "");
+  for (const [k, rows] of Object.entries(O.library || {})) t += `\n${k.toUpperCase()}:\n` + rows.slice(0, 15).map(r => `- ${r.name}: ${String(r.description || "").slice(0, 400)}`).join("\n") + "\n";
+  if (O.search) t += "\nSEARCH FOR THIS CAMPAIGN:\n" + (typeof O.search === "string" ? O.search : JSON.stringify(O.search)).slice(0, 8000);
+  return t.slice(0, 26000);
+}
+function learnText(L) {
+  if (!L) return "(none)";
+  if (!L.performance?.length) return L.message || "(no sent campaigns)";
+  const perf = L.performance.slice(0, 15).map(r => `${r.name} [${r.status}]: ${r.unique_leads_sent} leads, ${r.reply_rate}% reply, ${r.positive_rate}% positive`).join("\n");
+  const copy = (L.copy_of_best_and_worst || []).map(r => `== ${r.label.toUpperCase()}: ${r.name} (${r.positive_rate}% positive, ${r.reply_rate}% reply)\n` +
+    (r.sequence || []).slice(0, 2).map(s => s.variants.slice(0, 2).map(v => `Step ${s.step} subject: ${v.subject}\n${v.body.slice(0, 900)}`).join("\n")).join("\n")).join("\n\n");
+  return (perf + "\n\n" + copy).slice(0, 22000) + "\n(Rates per unique lead sent; campaign-level only, never per variant.)";
+}
+function onbText(N) {
+  if (!N) return "(none)";
+  let t = N.form ? "ONBOARDING FORM: " + JSON.stringify(N.form).slice(0, 8000) : "";
+  if (N.transcripts?.length) t += "\nCALL TRANSCRIPT (" + N.transcripts[0].created + "): " + N.transcripts[0].transcript.slice(0, 12000);
+  return t || "(none)";
+}
+
+async function planVariants() {
+  const R = await getRules();
+  const prompt = `You are running stage 3 (copy) of Cymate's campaign pipeline for a CSM. Every campaign is an A/B test of copy LENGTHS: pick AT LEAST TWO variants, each a different length tag. The default pair is one SHORT and one MEDIUM. Use a LONG instead of (or in addition to) the MEDIUM only when the campaign needs the room (a signal to explain, a P.S. analogy, a complex offer). Never two variants with the same tag.
+Frameworks by tag (these are the only Octave template agents): SHORT = TWO_SENTENCE_PAIN or POKE_THE_BEAR. MEDIUM = TFKD or TALKING_TO_OTHER_FOLKS. LONG = STANDARD_GO_TO.
+Use the "How to pick" rules in the Cymate rules to choose the framework inside each tag from the group, offer and signal in the CSM's brief. Then write the campaign brief the Octave template agents get (the format in the rules). The brief is the only source of truth about the client: only what the CSM wrote, the client's Octave library and the Smartlead history. Never invent numbers, customers, case studies, prices or timelines. Write pain as common for the role, never as a fact about the reader. Spell the company exactly.
+
+CYMATE RULES:
+${R.slice(0, 15000)}
+
+CLIENT: ${S.client}
+CSM BRIEF (the campaign to run): ${S.ask}
+
+OCTAVE:
+${octaveText(S.ctx?.octave)}
+
+SMARTLEAD HISTORY (this client's campaigns, best and worst copy):
+${learnText(S.ctx?.learn)}
+
+ONBOARDING:
+${onbText(S.ctx?.onb)}
+
+Reply with only JSON:
+{"variants": [
+   {"tag": "SHORT", "framework": "<TWO_SENTENCE_PAIN or POKE_THE_BEAR>", "why": "<2 sentences: which How to pick rule applies and why this framework is the right short test for this group, offer and signal>"},
+   {"tag": "MEDIUM or LONG", "framework": "<a framework of that tag>", "why": "<2 sentences>"}
+ ],
+ "test_hypothesis": "<one line a CSM can tell the client, e.g. 'We are A/B testing a short pain question against a medium TFKD email to see which gets more replies from bank data leaders'>",
+ "considered": [{"framework": "<key>", "why_not": "<one line>"}],
+ "learnings": ["<what this client's Smartlead history says to do or avoid, citing campaign names and rates; empty if no history>"],
+ "octave_used": ["<the Octave facts the copy relies on: offer, persona pains, proof>"],
+ "personalization": {
+   "goal": "<one sentence: what the personalized line must prove to the reader (that we understand a specific moment in THEIR company that makes the pain in PAIN POINTS urgent now)>",
+   "signals": [
+     {"priority": 1, "signal": "<a specific, observable event at the prospect's company that makes this offer relevant now, e.g. 'posted a SOC analyst or detection engineer role in the last 90 days'>",
+      "why_it_matters": "<how this signal connects to a pain or use case from the client's Octave library or the brief>",
+      "where_to_look": "<exact places: careers page, LinkedIn jobs, press releases, SEC filings, product changelog, partner pages, the person's LinkedIn posts>",
+      "line_pattern": "<how the line reads, e.g. 'since you're hiring 2 SOC analysts, I'm curious if alert volume is outpacing the team?'>"},
+     "<3 to 5 signals, best first, each tied to a different pain or use case>"],
+   "person_level": "<what to use about the person when no company signal is found: their role scope, time in seat, a post they wrote; never their name or personal life>",
+   "does_not_count": ["<facts that look personal but prove nothing, e.g. 'founded in 2015', 'is a leader in', generic funding with no link to the pain, awards>"],
+   "recency": "<e.g. last 90 days first, never older than 12 months>",
+   "connect_to_pain": "<the rule for turning the fact into the question: fact -> what it implies for their team -> the poke the bear question from PAIN POINTS>",
+   "good_example": "<one good personalized line for an illustrative made-up company, starting 'Example:'>",
+   "bad_example": "<one bad generic line, and why it is bad>",
+   "fallback": "<what the agent does when no signal and no person-level line is found: confidence low, the lead gets the fallback email>"},
+ "brief": "<the campaign brief in the exact format: CLIENT: <name> - <one line> / OFFER / OUTCOME FOR THE READER / UNIQUE MECHANISM / RISK REDUCTION / PROOF / PAIN POINTS / BANNED WORDS AND TOPICS / SEGMENTS (one line each: what they do, facts that count, the question) / SOFT CTA / SUBJECT LINES (at least 3, lowercase)>",
+ "open_questions": ["<anything the CSM should confirm, e.g. a case study that isn't approved>"]}`;
+  const r = await sample.json(prompt, { cache: false, modelTier: "complex" });
+  let vs = (r.variants || []).filter(v => FW[v.framework]).map(v => ({ ...v, tag: tagOf(v.framework) }));
+  const seen = new Set(); vs = vs.filter(v => !seen.has(v.tag) && seen.add(v.tag));  // one variant per length
+  if (!vs.some(v => v.tag === "SHORT")) vs.unshift({ tag: "SHORT", framework: "TWO_SENTENCE_PAIN", why: "Added so the test always includes a short email." });
+  if (vs.length < 2) vs.push({ tag: "MEDIUM", framework: "TFKD", why: "Added so the test always has two lengths: TFKD is the Cymate default medium." });
+  const order = { SHORT: 0, MEDIUM: 1, LONG: 2 };
+  r.variants = vs.sort((a, b) => order[a.tag] - order[b.tag]);
+  return r;
+}
+async function buildAgentInstructions(v) {
+  const P = S.plan || {};
+  let tpl = null;
+  try { tpl = await bridge("agent_template", { framework: v.framework }); } catch (e) { tpl = null; }
+  const own = /own Octave workspace/i.test(S.ctx?.octave?.source || "");
+  const prompt = `You write the full instructions for one Octave content agent that writes Email 1 for a Cymate client. The CSM will paste your text into the agent's instructions field in Octave, as is, so it must work on its own: it must tell the agent everything it needs to research the lead and write the complete email.
+
+Start from the TEMPLATE AGENT below (the live instructions of Cymate's ${FW[v.framework][0]} agent). Keep its sections and order: CONTEXT, SOURCE OF TRUTH, GREETING (if present), CAMPAIGN BRIEF (new), FRAMEWORK, PERSONALIZATION (new, replaces the template's generic research line), RESEARCH, STYLE, CONFIDENCE, OUTPUT. Keep every hard rule, the house style and the exact OUTPUT JSON contract of the template.
+Change it for this campaign:
+1. CONTEXT: name the client and the campaign (${v.tag} variant, ${FW[v.framework][0]}), and say it writes the whole email.
+2. CAMPAIGN BRIEF: paste the whole brief below into the instructions, under this heading, so the agent no longer depends on runtime context. Keep the rule that a "Segment: <name>" line in the runtime context, when present, picks the segment.
+3. SOURCE OF TRUTH: ${own ? "this agent will live in the client's OWN Octave workspace, so its library (personas, use cases, pain points, proof points) belongs to the client: tell the agent to use the library to match the lead's signal to the right persona pain and use case, while sender claims still come only from the brief and approved proof." : "this agent lives in the shared Cymate workspace, which holds other clients' libraries: keep the rule to ignore every library entity and use only the brief."}
+4. FRAMEWORK: keep the framework's lines, but fill in everything that is fixed for this campaign (the peers' role, the kind of company, the pain wording, the case study, the offer line, the CTA word for word). Leave only per-lead slots in angle brackets.
+5. PERSONALIZATION: write a real research and writing plan from the PERSONALIZATION PLAN below: the signals in priority order, what each proves, where to look, how to turn the fact into the line and the question, what does not count, recency, the person-level option, a good and a bad example, and the fallback. This is the most important section.
+6. RESEARCH: keep prospect-only research and domain confirmation, and point it at the sources the signals need.
+7. CONFIDENCE: high only when a priority signal (or the person-level line) was found with a source URL, about the company at companyDomain, and every sender claim is in the brief.
+Plain text only, no markdown symbols, section headings in capitals, no dashes. Reply with only the instructions text.
+
+TEMPLATE AGENT (${tpl?.name || FW[v.framework][0]}):
+${(tpl?.instructions || "(the template could not be read: build the sections above from the Cymate rules)").slice(0, 9000)}
+
+TEMPLATE WEB SEARCH SETTINGS: ${tpl?.web_search_instructions || "(none)"}
+
+CAMPAIGN BRIEF:
+${P.brief || S.ask}
+
+PERSONALIZATION PLAN:
+${JSON.stringify(P.personalization || {}, null, 1).slice(0, 6000)}
+
+WHY THIS FRAMEWORK FOR THIS VARIANT: ${v.why}
+SMARTLEAD LEARNINGS: ${(P.learnings || []).join(" | ") || "(none)"}`;
+  const r = await sample(prompt, { cache: false, modelTier: "complex" });
+  v.agent_instructions = r.text.trim();
+  v.agent_template = tpl ? { name: tpl.name, oid: tpl.agent_oid, updated: tpl.updated } : null;
+  return v.agent_instructions;
+}
+function copyPrompt(v, feedback, base, target, n) {
+  const P = S.plan || {}, fw = v.framework, tag = tagOf(fw), lim = LIMIT[tag];
+  return `You write cold email copy for Cymate. This is the ${tag} variant of an A/B test of lengths, in the ${FW[fw][0]} framework. Follow the Cymate rules exactly: this framework's structure, house style, plain text, no dashes, sentences under 25 words, lowercase subjects, start with "Hey {{first_name}},", no links. Email 1 must be ${tag === "SHORT" ? "SHORT: 2 to 3 sentences, under 60 words" : tag === "MEDIUM" ? "MEDIUM: 4 short lines, under 110 words" : "LONG: the full Standard Go-To, under 110 words before the P.S."}. Use {{first_name}}, {{company_name}} and {{personalization}} (one recent fact about their company, filled per lead by the Octave agent) as merge fields where the framework needs them. Use only facts in the campaign brief.
+
+CYMATE RULES:
+${(rules || FALLBACK_RULES).slice(0, 15000)}
+
+CAMPAIGN BRIEF:
+${P.brief || S.ask}
+
+WHAT THIS CLIENT'S SMARTLEAD HISTORY SAYS: ${(P.learnings || []).join(" | ") || "(no history)"}
+PERSONALIZATION PLAN ({{personalization}} is filled per lead by the Octave agent with the best signal below): ${JSON.stringify(P.personalization || {}).slice(0, 4000)}
+${base ? `\nCURRENT ${tag} COPY:\nSubject: ${base.subject}\n${base.email1}\n${base.ps ? "P.S. " + base.ps + "\n" : ""}${(base.followups || []).map((f, i) => `Follow up ${i + 1} (day +${f.delay_days}):\n${f.body}`).join("\n")}\n` : ""}
+${feedback ? `FEEDBACK TO APPLY${target && target !== "all" ? " (to " + target + " only, keep the rest unchanged)" : ""}: ${feedback}` : "Write the first draft."}
+
+Reply with only JSON: ${n > 1 ? `an array of ${n} distinct options for Email 1, each {"subject": "...", "email1": "...", "ps": "", "why": "<one line>"}` :
+`{"subject": "<the best subject line, lowercase>", "subject_alts": ["<at least 2 more distinct subject lines, lowercase>", "...", "..."], "email1": "<Email 1, ${tag}>", "ps": "${fw === "STANDARD_GO_TO" ? "<the P.S. analogy>" : ""}",
+ "followups": [{"delay_days": 3, "body": "<follow up 1, threads as a reply, no sign-off, under ${tag === "SHORT" ? 40 : 60} words, not a bump>"}, {"delay_days": 4, "body": "<follow up 2, last note, under ${tag === "SHORT" ? 35 : 50} words>"}],
+ "how_it_maps": "<one line per framework part: which sentence does which job>",
+ "personalization": {"used": <true if Email 1 has {{personalization}} or another per-lead line, else false>, "what": "<what the per-lead line says and which fact feeds it, in plain words>", "example": "<the first line of Email 1 filled in for an illustrative made-up company, starting 'Example:'>"},
+ "why": "<one line: what this draft does${feedback ? " differently" : ""}>"}`}
+(${tag} limit: ${lim} words for Email 1.)`;
+}
+async function writeCopy(v, feedback, base, target) {
+  await getRules();
+  const r = await sample.json(copyPrompt(v, feedback, base, target, 1), { cache: false });
+  if (!r.email1) throw { code: "invalid_json", message: "No email in the answer" };
+  let alts = (r.subject_alts || []).filter(s => s && s !== "..." && s !== r.subject);
+  if (alts.length < 2) {  // always at least 3 subject lines
+    const more = await sample.json(`Write ${3 - alts.length} more distinct cold email subject lines for this email. Lowercase, 2 to 5 words, no clickbait, no dashes. Existing: ${[r.subject, ...alts].join(" | ")}\n\nEmail:\n${r.email1}\n\nReply with only a JSON array of strings.`, { cache: false, modelTier: "quick" }).catch(() => []);
+    alts = alts.concat((Array.isArray(more) ? more : []).filter(s => typeof s === "string" && s.trim())).slice(0, 4);
+  }
+  return { subject: r.subject || "", subject_alts: alts, email1: r.email1, ps: r.ps || "", followups: r.followups || [], how_it_maps: r.how_it_maps || "", note: r.why || "", personalization: r.personalization || null };
+}
+
+/* ---------- QA (stage 3 checks plus house style, limits by length tag) ---------- */
+function syl(w) { w = w.toLowerCase().replace(/[^a-z]/g, ""); if (!w) return 0; if (w.length <= 3) return 1; w = w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, "").replace(/^y/, ""); const m = w.match(/[aeiouy]{1,2}/g); return m ? m.length : 1; }
+function qa(body, subject, max, first) {
+  const f = [], b = body || "";
+  const words = b.split(/\s+/).filter(Boolean).length;
+  const text = b.replace(/^\s*(hey|hi|hello)\b[^,\n]*,/i, "").replace(/\{\{[^}]+\}\}/g, "x");
+  const sents = text.split(/[.?!]+\s|\n+/).map(s => s.trim()).filter(s => s.split(/\s+/).length > 2);
+  const ws = text.split(/\s+/).filter(Boolean), sy = ws.reduce((a, w) => a + syl(w), 0);
+  const grade = sents.length && ws.length ? Math.max(0, 0.39 * (ws.length / sents.length) + 11.8 * (sy / ws.length) - 15.59) : 0;
+  const longest = Math.max(0, ...sents.map(s => s.split(/\s+/).length));
+  if (/ [-–—] |[–—]/.test(b)) f.push(["bad", "dash"]);
+  if (/https?:\/\/|www\./i.test(b)) f.push(["bad", "link"]);
+  if (/\b(really|very|extremely|incredibly|super|truly|absolutely)\b/i.test(b)) f.push(["warn", "intensifier"]);
+  if (first && !/^\s*hey\s+\{\{first_name\}\},/i.test(b)) f.push(["warn", "doesn't open with Hey {{first_name}},"]);
+  if (subject && subject !== subject.toLowerCase() && !/\{\{/.test(subject)) f.push(["warn", "subject not lowercase"]);
+  if (longest > 25) f.push(["warn", `${longest} word sentence`]);
+  return { f, words, grade, max };
+}
+function meter(q) { return `<span class="meter"><span class="${q.words > q.max ? "over" : ""}">${q.words}/${q.max} words</span> · <span class="${q.grade > 6.5 ? "over" : ""}">grade ${q.grade.toFixed(1)}</span></span>` + (q.f.length ? q.f.map(([k, t]) => `<span class="chip ${k}">${esc(t)}</span>`).join("") : `<span class="chip good">house style ok</span>`); }
+
+/* ---------- render ---------- */
+function renderAll() { renderFw(); renderSources(); renderAgent(); renderCopy(); renderTests(); renderChat(); }
+function renderFw() {
+  const P = S.plan, el = $("fwPanel");
+  if (!P) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = `<h2><span class="step">2</span>Frameworks</h2>
+    ${P.test_hypothesis ? `<div class="why" style="margin-bottom:10px">${esc(P.test_hypothesis)}</div>` : ""}
+    <div class="fwgrid">${S.variants.map(v => `<div class="fwcard"><div class="row"><span class="len len-${v.tag.toLowerCase()}">${v.tag}</span><span class="fwname">${esc(FW[v.framework][0])}</span></div><div class="why">${esc(v.why)}</div></div>`).join("")}</div>
+    ${P.considered?.length ? `<div class="alts" style="margin-top:10px">${P.considered.map(c => `<div><b>${esc(FW[c.framework]?.[0] || c.framework)}</b>: ${esc(c.why_not)}</div>`).join("")}</div>` : ""}
+    ${P.open_questions?.length ? `<div class="note" style="margin-top:10px"><b>Confirm before sending:</b> ${P.open_questions.map(esc).join(" · ")}</div>` : ""}
+`;
+}
+function renderSources() {
+  const P = S.plan, el = $("srcPanel");
+  if (!P) { el.hidden = true; return; }
+  el.hidden = false;
+  const L = S.ctx?.learn, O = S.ctx?.octave;
+  const perf = L?.performance?.length ? `<div class="tablewrap"><table><thead><tr><th>Campaign</th><th>Status</th><th class="num">Leads sent</th><th class="num">Reply %</th><th class="num">Positive %</th></tr></thead><tbody>${L.performance.slice(0, 15).map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.status)}</td><td class="num">${Number(r.unique_leads_sent).toLocaleString()}</td><td class="num">${Number(r.reply_rate).toFixed(2)}</td><td class="num">${Number(r.positive_rate).toFixed(2)}</td></tr>`).join("")}</tbody></table></div>` : "";
+  const lib = O?.library ? Object.entries(O.library).map(([k, rows]) => `<details><summary>${esc(k.replace(/_/g, " "))} <span class="note">${rows.length}</span></summary><ul class="tight">${rows.map(r => `<li><b>${esc(r.name)}</b>: ${esc(r.description)}</li>`).join("")}</ul></details>`).join("") : "";
+  el.innerHTML = `<summary>What Octave and Smartlead said <span class="note">${(P.octave_used || []).length} Octave facts · ${(P.learnings || []).length} Smartlead learnings</span></summary>
+    <div class="inner">
+      <div class="ctx">
+        <div><h3>Used from Octave</h3><ul class="tight">${(P.octave_used || []).map(x => `<li>${esc(x)}</li>`).join("") || "<li>Nothing found</li>"}</ul></div>
+        <div><h3>Learned from Smartlead</h3><ul class="tight">${(P.learnings || []).map(x => `<li>${esc(x)}</li>`).join("") || "<li>No sent campaigns to learn from</li>"}</ul></div>
+      </div>
+      ${perf ? `<div><h3 style="font-size:12.5px;margin-bottom:6px">Smartlead campaigns</h3>${perf}<div class="hint">Rates per unique lead sent.</div></div>` : ""}
+      ${lib ? `<div><h3 style="font-size:12.5px;margin-bottom:2px">Octave library (${esc(O.source)})</h3>${lib}</div>` : ""}
+    </div>`;
+}
+const BRIEF_KEYS = ["CLIENT", "OFFER", "OUTCOME FOR THE READER", "UNIQUE MECHANISM", "RISK REDUCTION", "PROOF", "PAIN POINTS", "BANNED WORDS AND TOPICS", "SEGMENTS", "SOFT CTA", "SUBJECT LINES"];
+function briefFields(text) {
+  const out = [], re = new RegExp("^\\s*(" + BRIEF_KEYS.join("|") + ")\\s*:\\s*", "i");
+  for (const line of String(text || "").split(/\r?\n/)) {
+    const m = line.match(re);
+    if (m) out.push([m[1].toUpperCase(), line.slice(m[0].length)]);
+    else if (out.length && line.trim()) out[out.length - 1][1] += (out[out.length - 1][1] ? "\n" : "") + line.trim();
+  }
+  return out.length ? out : [["BRIEF", String(text || "")]];
+}
+function renderAgent() {
+  const P = S.plan, el = $("agentPanel");
+  if (!P) { el.hidden = true; return; }
+  el.hidden = false;
+  const blocks = S.variants.map((v, k) => {
+    const txt = v.agent_instructions;
+    return `<div class="agentblock">
+      <div class="row"><span class="len len-${v.tag.toLowerCase()}">${v.tag}</span><b>${esc(FW[v.framework][0])}</b>
+        ${v.agent_template ? `<span class="note">from ${esc(v.agent_template.name)}</span>` : ""}
+        <span style="margin-left:auto" class="row">${txt ? `<button class="btn primary" data-copyagent="${k}">Copy instructions</button>` : ""}<button class="btn ghost" data-rebuild="${k}">${txt ? "Rebuild" : "Build"}</button></span></div>
+      <div class="note" id="agentNote${k}">${txt ? "Paste into the agent's instructions field in Octave. It holds the brief, the framework and the personalization plan, so it writes the whole email." : "Not built yet."}</div>
+      ${txt ? `<pre class="brief" id="agentText${k}" style="margin:0">${esc(txt)}</pre>` : ""}
+    </div>`;
+  }).join("");
+  el.innerHTML = `<summary>Instructions for the Octave agent <span class="note">one paste-ready block per variant</span></summary><div class="inner">${blocks}</div>`;
+  el.querySelectorAll("[data-copyagent]").forEach(b => b.onclick = async () => {
+    const k = +b.dataset.copyagent, txt = S.variants[k].agent_instructions;
+    try { await navigator.clipboard.writeText(txt); $("agentNote" + k).textContent = "Copied. Paste it into the agent's instructions in Octave."; }
+    catch { const r = document.createRange(); r.selectNodeContents($("agentText" + k)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); $("agentNote" + k).textContent = "Selected: press Ctrl+C to copy."; }
+  });
+  el.querySelectorAll("[data-rebuild]").forEach(b => b.onclick = async () => {
+    const k = +b.dataset.rebuild; b.disabled = true; $("agentNote" + k).innerHTML = `<span class="spin"></span> Writing the instructions`;
+    try { await buildAgentInstructions(S.variants[k]); renderAgent(); el.open = true; touch(); }
+    catch (e) { $("agentNote" + k).innerHTML = `<span class="err">${esc(errText(e))}</span>`; b.disabled = false; }
+  });
+}
+function renderCopy() {
+  const el = $("copyPanel");
+  if (!S.variants.length) { el.hidden = true; return; }
+  el.hidden = false;
+  const haveAll = S.variants.every(v => v.versions.length);
+  el.innerHTML = `<h2><span class="step">3</span>Copy <span class="note">${S.variants.map(v => v.tag).join(" vs ")}</span></h2>
+    <div class="vargrid">${S.variants.map((v, k) => variantHtml(v, k)).join("")}</div>
+    <div class="iter">
+      <label for="fbAll" style="margin:0">Feedback for every variant</label>
+      <textarea id="fbAll" rows="2" placeholder="e.g. lead with the Black Hat moment in both, softer CTA"></textarea>
+      <div class="row"><button class="btn primary" id="rwAll" ${haveAll ? "" : "disabled"}>Rewrite all variants</button>
+        <button class="btn" id="addVar" ${S.variants.length >= 3 ? "disabled" : ""}>Add a ${S.variants.some(v => v.tag === "LONG") ? "MEDIUM" : "LONG"} variant</button>
+        <button class="btn ghost" id="cpAll" ${haveAll ? "" : "disabled"}>Copy all</button><span class="note" id="allNote"></span></div>
+    </div>`;
+  S.variants.forEach((v, k) => bindVariant(v, k));
+  $("rwAll").onclick = async () => {
+    const fb = $("fbAll").value.trim() || "Make each one tighter and more likely to get a reply"; $("allNote").innerHTML = `<span class="spin"></span> Rewriting ${S.variants.length} variants`;
+    $("rwAll").disabled = true;
+    const r = await Promise.allSettled(S.variants.map(async v => { const nv = await writeCopy(v, fb, v.versions[v.current], "all"); v.versions.push({ ...nv, by: "Rewrite", note: "All: " + fb, at: Date.now() }); v.current = v.versions.length - 1; }));
+    renderCopy(); touch();
+    const bad = r.find(x => x.status === "rejected"); if (bad) $("allNote").innerHTML = `<span class="err">${esc(errText(bad.reason))}</span>`;
+  };
+  $("addVar").onclick = async () => {
+    const tag = S.variants.some(v => v.tag === "LONG") ? "MEDIUM" : "LONG";
+    const fw = tag === "LONG" ? "STANDARD_GO_TO" : "TFKD";
+    const v = { tag, framework: fw, why: `Added by you to test a ${tag.toLowerCase()} email.`, versions: [], current: 0 };
+    S.variants.push(v); S.variants.sort((a, b) => ({ SHORT: 0, MEDIUM: 1, LONG: 2 })[a.tag] - ({ SHORT: 0, MEDIUM: 1, LONG: 2 })[b.tag]);
+    renderAll(); $("allNote").innerHTML = `<span class="spin"></span> Writing the ${tag} variant`;
+    try { const c = await writeCopy(v, ""); v.versions.push({ ...c, by: "First draft", at: Date.now() }); } catch (e) { $("allNote").innerHTML = `<span class="err">${esc(errText(e))}</span>`; }
+    renderAll(); touch();
+  };
+  $("cpAll").onclick = async () => {
+    const txt = S.variants.map(v => { const x = v.versions[v.current]; return `[${v.tag}] ${FW[v.framework][0]}\nSubject: ${x.subject}\n\n${x.email1}${x.ps ? "\n\nP.S. " + x.ps : ""}` + (x.followups || []).map((f, i) => `\n\n--- Follow up ${i + 1} (day +${f.delay_days})\n${f.body}`).join(""); }).join("\n\n==========\n\n");
+    try { await navigator.clipboard.writeText(txt); $("cpAll").textContent = "Copied"; } catch { $("cpAll").textContent = "Copy blocked"; }
+    setTimeout(() => { if ($("cpAll")) $("cpAll").textContent = "Copy all"; }, 2000);
+  };
+}
+function variantHtml(v, k) {
+  const x = v.versions[v.current];
+  const head = `<div class="vhead"><span class="len len-${v.tag.toLowerCase()}">${v.tag}</span><b>${esc(FW[v.framework][0])}</b>
+    <select data-k="${k}" class="fwsel" aria-label="Framework for this variant">${Object.entries(FW).filter(([, f]) => f[1] === v.tag).map(([key, f]) => `<option value="${key}" ${key === v.framework ? "selected" : ""}>${esc(f[0])}</option>`).join("")}</select>
+    ${S.variants.length > 2 ? `<button class="btn ghost" data-rm="${k}" style="padding:2px 8px;font-size:12px">Remove</button>` : ""}</div>`;
+  if (!x) return `<div class="variant">${head}<div class="note" style="padding:12px"><span class="spin"></span> Writing the ${v.tag.toLowerCase()} email</div></div>`;
+  const q1 = qa(x.email1, x.subject, LIMIT[v.tag], true);
+  return `<div class="variant">${head}
+    <div class="versions" style="padding:8px 10px 0">${v.versions.map((y, i) => `<button class="vbtn" data-k="${k}" data-v="${i}" aria-pressed="${i === v.current}" title="${esc(y.by + (y.note ? ": " + y.note : ""))}">v${i + 1}</button>`).join("")}<span class="vnote">${esc(x.by)}${x.note ? ": " + esc(x.note) : ""}</span></div>
+    <div class="mail"><div class="mh"><b>Email 1</b><span class="note">${1 + (x.subject_alts?.length || 0)} subject lines, click one to use it</span></div>
+      <input type="text" class="subj" id="e${k}-subject" value="${esc(x.subject)}" aria-label="Subject">
+      ${x.subject_alts?.length ? `<div class="mf">${x.subject_alts.map((s, i) => `<button class="btn ghost" data-k="${k}" data-subj="${i}" style="padding:2px 9px;font-size:12.5px">${esc(s)}</button>`).join("")}</div>` : ""}
+      <textarea class="body" id="e${k}-email1" rows="${v.tag === "SHORT" ? 5 : 9}" aria-label="Email 1">${esc(x.email1)}</textarea>
+      ${x.ps || v.framework === "STANDARD_GO_TO" ? `<textarea class="body" id="e${k}-ps" rows="2" style="min-height:60px" aria-label="P.S.">${esc(x.ps)}</textarea>` : ""}
+      <div class="mf" id="q${k}-1">${meter(q1)}</div></div>
+    ${persHtml(x)}
+    ${(x.followups || []).map((f, i) => `<div class="mail"><div class="mh"><b>Follow up ${i + 1}</b><span class="note">day +${esc(f.delay_days)} · threads as a reply</span></div>
+      <textarea class="body" id="e${k}-fu${i}" rows="3" style="min-height:80px" aria-label="Follow up ${i + 1}">${esc(f.body)}</textarea><div class="mf" id="q${k}-fu${i}">${meter(qa(f.body, "", v.tag === "SHORT" ? 40 : 60, false))}</div></div>`).join("")}
+    ${x.how_it_maps ? `<details style="margin:8px 10px 0"><summary>How it maps to ${esc(FW[v.framework][0])}</summary><pre class="brief">${esc(x.how_it_maps)}</pre></details>` : ""}
+    <div class="vfoot">
+      <textarea id="fb${k}" rows="2" placeholder="Feedback for the ${v.tag.toLowerCase()} email" aria-label="Feedback for the ${v.tag} variant"></textarea>
+      <div class="row">
+        <select id="tg${k}" style="width:auto" aria-label="Apply to"><option value="all">Whole sequence</option><option value="Email 1">Email 1</option>${(x.followups || []).map((_, i) => `<option value="Follow up ${i + 1}">Follow up ${i + 1}</option>`).join("")}</select>
+        <button class="btn primary" data-act="rw" data-k="${k}">Rewrite</button>
+        <button class="btn" data-act="opts" data-k="${k}">3 options</button>
+        <span class="note" id="n${k}"></span>
+      </div>
+      <div class="opts" id="o${k}"></div>
+    </div></div>`;
+}
+function persHtml(x) {
+  const p = x.personalization, gp = S.plan?.personalization;
+  const usesField = /\{\{\s*personalization\s*\}\}/i.test(x.email1 || "");
+  if (p && p.used === false && !usesField) return `<div class="pers">No per-lead line in this variant: every lead gets the same email, apart from <code>{{first_name}}</code> and <code>{{company_name}}</code>.</div>`;
+  if (!gp && !p) return "";
+  const sig = (gp?.signals || []).filter(z => z && typeof z === "object");
+  return `<details class="pers"><summary><b>Personalization</b>: ${esc(gp?.goal || p?.what || "")}</summary>
+    ${p?.what ? `<div style="margin-top:6px">In this email: ${esc(p.what)}</div>` : ""}
+    ${sig.length ? `<ol class="tight" style="margin-top:6px">${sig.map(z => `<li><b>${esc(z.signal)}</b><br>Why: ${esc(z.why_it_matters)}<br>Where: ${esc(z.where_to_look)}<br>Line: <i>${esc(z.line_pattern)}</i></li>`).join("")}</ol>` : ""}
+    ${gp?.connect_to_pain ? `<div>Turning the fact into the line: ${esc(gp.connect_to_pain)}</div>` : ""}
+    ${gp?.person_level ? `<div>No company signal: ${esc(gp.person_level)}</div>` : ""}
+    ${gp?.does_not_count?.length ? `<div>Doesn't count: ${gp.does_not_count.map(esc).join(" · ")}</div>` : ""}
+    ${gp?.recency ? `<div>Recency: ${esc(gp.recency)}</div>` : ""}
+    ${p?.example || gp?.good_example ? `<div class="ex">${esc(p?.example || gp.good_example)}</div>` : ""}
+    ${gp?.bad_example ? `<div class="ex" style="opacity:.8">Bad: ${esc(gp.bad_example)}</div>` : ""}
+    ${gp?.fallback ? `<div>If nothing is found: ${esc(gp.fallback)}</div>` : ""}</details>`;
+}
+function bindVariant(v, k) {
+  const root = $("copyPanel");
+  root.querySelectorAll(`[data-k="${k}"][data-v]`).forEach(b => b.onclick = () => { v.current = +b.dataset.v; renderCopy(); touch(); });
+  root.querySelectorAll(`[data-k="${k}"][data-subj]`).forEach(b => b.onclick = () => {
+    const x = v.versions[v.current], i = +b.dataset.subj, alts = [...x.subject_alts], pick = alts[i]; alts[i] = x.subject;
+    v.versions[v.current] = { ...x, subject: pick, subject_alts: alts }; renderCopy(); touch();
+  });
+  const sel = root.querySelector(`.fwsel[data-k="${k}"]`);
+  if (sel) sel.onchange = async () => {
+    const fw = sel.value; if (fw === v.framework) return;
+    v.framework = fw; v.why = `Switched by you to ${FW[fw][0]}.`; $("n" + k) && ($("n" + k).innerHTML = `<span class="spin"></span> Rewriting in ${esc(FW[fw][0])}`);
+    try { const c = await writeCopy(v, `Rewrite in the ${FW[fw][0]} framework`, v.versions[v.current]); v.versions.push({ ...c, by: FW[fw][0], at: Date.now() }); v.current = v.versions.length - 1; }
+    catch (e) { alert0(k, e); }
+    renderAll(); touch();
+  };
+  const rm = root.querySelector(`[data-rm="${k}"]`); if (rm) rm.onclick = () => { S.variants.splice(k, 1); renderAll(); touch(); };
+  root.querySelectorAll(`[data-act][data-k="${k}"]`).forEach(b => b.onclick = () => iterate(v, k, b.dataset.act === "opts" ? 3 : 1));
+  let t;
+  root.querySelectorAll(`[id^="e${k}-"]`).forEach(inp => inp.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => editVariant(v, k), 600); }));
+}
+function alert0(k, e) { const n = $("n" + k); if (n) n.innerHTML = `<span class="err">${esc(errText(e))}</span>`; }
+function editVariant(v, k) {
+  const x = v.versions[v.current]; if (!x) return;
+  const nv = { ...x, subject: $(`e${k}-subject`).value, email1: $(`e${k}-email1`).value, ps: $(`e${k}-ps`) ? $(`e${k}-ps`).value : x.ps,
+    followups: (x.followups || []).map((f, i) => ({ ...f, body: $(`e${k}-fu${i}`)?.value ?? f.body })) };
+  if (x.by === "Your edit") v.versions[v.current] = { ...nv, at: Date.now() };
+  else { v.versions.push({ ...nv, by: "Your edit", note: "edited v" + (v.current + 1), at: Date.now() }); v.current = v.versions.length - 1; }
+  $(`q${k}-1`).innerHTML = meter(qa(nv.email1, nv.subject, LIMIT[v.tag], true));
+  (nv.followups || []).forEach((f, i) => { const q = $(`q${k}-fu${i}`); if (q) q.innerHTML = meter(qa(f.body, "", v.tag === "SHORT" ? 40 : 60, false)); });
+  const vs = $("copyPanel").querySelectorAll(".versions")[k];  // redraw only this variant's version bar, so typing keeps focus
+  if (vs) {
+    vs.innerHTML = v.versions.map((y, i) => `<button class="vbtn" data-k="${k}" data-v="${i}" aria-pressed="${i === v.current}">v${i + 1}</button>`).join("") + `<span class="vnote">Your edit</span>`;
+    vs.querySelectorAll("[data-v]").forEach(b => b.onclick = () => { v.current = +b.dataset.v; renderCopy(); touch(); });
+  }
+  touch();
+}
+async function iterate(v, k, n) {
+  const fb = $("fb" + k).value.trim(), target = $("tg" + k).value, x = v.versions[v.current], note = $("n" + k);
+  note.innerHTML = `<span class="spin"></span> ${n > 1 ? "Writing 3 options" : "Rewriting"}`;
+  try {
+    await getRules();
+    if (n > 1) {
+      const arr = await sample.json(copyPrompt(v, fb || `Three different angles for the ${v.tag.toLowerCase()} Email 1`, x, "Email 1", 3), { cache: false });
+      const list = (Array.isArray(arr) ? arr : []).filter(y => y.email1);
+      $("o" + k).innerHTML = list.map((y, i) => `<div class="opt"><div class="small">${esc(y.subject)}${y.why ? " · " + esc(y.why) : ""}</div>${esc(y.email1)}<div class="row" style="margin-top:6px"><button class="btn" data-o="${i}">Use this</button></div></div>`).join("");
+      $("o" + k).querySelectorAll("[data-o]").forEach(b => b.onclick = () => { const y = list[+b.dataset.o]; v.versions.push({ ...x, subject: y.subject || x.subject, email1: y.email1, ps: y.ps || x.ps, by: "Option", note: (fb ? fb + ". " : "") + (y.why || ""), at: Date.now() }); v.current = v.versions.length - 1; renderCopy(); touch(); });
+      note.textContent = "";
+    } else {
+      const nv = await writeCopy(v, fb || "Make it tighter and more likely to get a reply", x, target);
+      v.versions.push({ ...nv, by: "Rewrite", note: fb ? `${target === "all" ? "" : target + ": "}${fb}` : nv.note, at: Date.now() }); v.current = v.versions.length - 1;
+      renderCopy(); touch();
+    }
+  } catch (e) { note.innerHTML = `<span class="err">${esc(errText(e))}</span>`; }
+}
+
+/* ---------- chat: talk to Claude about the copy; it can change it ---------- */
+function renderChat() {
+  const el = $("chatPanel");
+  if (!S.variants.some(v => v.versions.length)) { el.hidden = true; return; }
+  el.hidden = false;
+  const log = (S.chat || []).map(m => `<div class="msg ${m.role === "user" ? "me" : "ai"}">${esc(m.content)}${m.applied ? `<span class="applied">${esc(m.applied)}</span>` : ""}</div>`).join("");
+  el.innerHTML = `<h2><span class="step">5</span>Chat about the copy</h2>
+    <div class="note" style="margin-bottom:10px">Tell Claude what's right and what's wrong. When you ask for a change, it updates the copy as a new version.</div>
+    <div class="chatlog" id="chatlog">${log || `<div class="note">e.g. "The short one is great. In the medium, drop the second sentence and use the Black Hat proof instead."</div>`}</div>
+    <textarea id="chatIn" rows="3" placeholder="Write a message (Ctrl+Enter to send)"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn primary" id="chatSend">Send</button><button class="btn ghost" id="chatClear">Clear chat</button><span class="note" id="chatNote"></span></div>`;
+  const lg = $("chatlog"); lg.scrollTop = lg.scrollHeight;
+  $("chatSend").onclick = sendChat;
+  $("chatIn").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) sendChat(); });
+  $("chatClear").onclick = () => { S.chat = []; renderChat(); touch(); };
+}
+async function sendChat() {
+  const text = $("chatIn").value.trim(); if (!text || !sample) return;
+  S.chat = (S.chat || []).concat({ role: "user", content: text }).slice(-30);
+  renderChat();
+  const note = $("chatNote"); note.innerHTML = `<span class="spin"></span> Thinking`; $("chatSend").disabled = true;
+  await getRules();
+  const cur = S.variants.map(v => { const x = v.versions[v.current] || {}; return { tag: v.tag, framework: v.framework, subject: x.subject, subject_alts: x.subject_alts, email1: x.email1, ps: x.ps, followups: x.followups }; });
+  const sys = `You are Cymate's copy editor, in a chat with the CSM about this campaign's cold email copy. Answer briefly and plainly. When the CSM asks for a change, make it and return the changed variant(s); when they only comment or ask, just answer. Keep each variant in its framework and length (SHORT under 60 words, MEDIUM and LONG under 110), keep house style (no dashes, lowercase subjects, at least 3 subject lines, start "Hey {{first_name}},"), and use only facts in the brief.
+
+CYMATE RULES (excerpt):
+${(rules || FALLBACK_RULES).slice(0, 8000)}
+
+CLIENT: ${S.client}
+CAMPAIGN BRIEF:
+${S.plan?.brief || S.ask}
+
+CURRENT COPY (JSON):
+${JSON.stringify(cur).slice(0, 20000)}
+
+Reply with only JSON: {"reply": "<your answer to the CSM>", "updates": [{"tag": "<SHORT|MEDIUM|LONG>", "subject": "...", "subject_alts": ["...", "..."], "email1": "...", "ps": "...", "followups": [{"delay_days": 3, "body": "..."}]}]}. "updates" holds only variants you changed, each complete; use [] when nothing changes.`;
+  const turns = [{ role: "user", content: sys }, { role: "assistant", content: "Understood. What would you like to change?" }].concat(S.chat.slice(-12).map(m => ({ role: m.role, content: m.content })));
+  try {
+    const r = await sample.json(turns, { cache: false });
+    const changed = [];
+    for (const u of (Array.isArray(r.updates) ? r.updates : [])) {
+      const v = S.variants.find(x => x.tag === String(u.tag || "").toUpperCase()); if (!v || !u.email1) continue;
+      const x = v.versions[v.current] || {};
+      v.versions.push({ ...x, subject: u.subject || x.subject, subject_alts: u.subject_alts?.length ? u.subject_alts : x.subject_alts, email1: u.email1, ps: u.ps ?? x.ps, followups: u.followups?.length ? u.followups : x.followups, by: "Chat", note: text.slice(0, 120), at: Date.now() });
+      v.current = v.versions.length - 1; changed.push(v.tag);
+    }
+    S.chat.push({ role: "assistant", content: r.reply || (changed.length ? "Done." : "OK."), applied: changed.length ? `Updated ${changed.join(" and ")} as a new version` : "" });
+    renderCopy(); renderChat(); touch();
+  } catch (e) {
+    renderChat(); $("chatIn").value = text;
+    $("chatNote").innerHTML = `<span class="err">${esc(errText(e))}</span>`;
+    S.chat.pop();
+  }
+}
+
+/* ---------- optional: test on real leads with the Octave template agents ---------- */
+function renderTests() {
+  const el = $("testPanel");
+  if (!S.plan || !S.variants.some(v => v.versions.length)) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = `<h2><span class="step">4</span>Test on real leads</h2>
+    <div class="note">Runs each variant's Octave template agent with this brief on 3 real prospects from ${esc(S.client)}'s Smartlead campaigns, as the terminal's <code>--test</code> run does. About ${2 * 3 * S.variants.length} Octave credits, 30 to 90 seconds.</div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="runTest" ${bridgeOk === false ? "disabled" : ""}>Run ${S.variants.map(v => v.tag).join(" + ")} on 3 leads</button><span class="note" id="testNote"></span></div>
+    <div class="tests">${(S.tests || []).map(t => {
+      const tagc = `<span class="len len-${(t.tag || "medium").toLowerCase()}">${esc(t.tag)}</span>`;
+      if (t.status === "running") return `<div class="test"><div class="row">${tagc}<b>${esc(t.lead.first)} ${esc(t.lead.last || "")}</b></div><span class="note"><span class="spin"></span> ${esc(t.lead.company)}: researching and writing</span></div>`;
+      if (t.status === "error") return `<div class="test"><div class="row">${tagc}<b>${esc(t.lead.first)} · ${esc(t.lead.company)}</b></div><span class="err">${esc(t.error)}</span></div>`;
+      return `<div class="test"><div class="row">${tagc}<b>${esc(t.lead.first)} ${esc(t.lead.last || "")}</b> <span class="note">${esc(t.lead.title || "")} @ ${esc(t.lead.company)}</span></div>
+         <div class="row"><span class="chip ${t.r.confidence === "high" ? "good" : "warn"}">${esc(t.r.confidence)} confidence</span>${(t.r.hard_fails || []).concat(t.r.flags || []).map(x => `<span class="chip bad">${esc(x)}</span>`).join("")}</div>
+         <div class="note">Subject: ${esc(t.r.subject)}</div><pre>${esc(t.r.body)}</pre>${t.r.ps ? `<pre>${esc(t.r.ps)}</pre>` : ""}
+         <div class="fact">Fact: ${esc(t.r.fact_used)}${t.r.source_url ? ` · <a href="${esc(t.r.source_url)}" target="_blank" rel="noopener">source</a>` : ""}</div></div>`; }).join("")}</div>`;
+  $("runTest").onclick = runTest;
+}
+async function runTest() {
+  const note = $("testNote"); $("runTest").disabled = true;
+  try {
+    note.innerHTML = `<span class="spin"></span> Getting 3 prospects from Smartlead`;
+    const L = await bridge("sample_leads", { client: S.client, n: 3 });
+    if (!L.leads?.length) { note.textContent = L.message || "No leads found"; return; }
+    note.innerHTML = `<span class="spin"></span> Starting the agents`;
+    S.tests = []; let credits = 0;
+    for (const v of S.variants) {
+      const r = await bridge("start_agent_runs", { client: S.client, framework: v.framework, brief: S.plan.brief, leads: L.leads });
+      credits += r.estimated_octave_credits || 0;
+      L.leads.forEach((lead, i) => S.tests.push({ tag: v.tag, lead, job: r.job_ids[i], status: "running" }));
+    }
+    note.textContent = `~${credits} Octave credits`; renderTests(); touch();
+    for (let i = 0; i < 60 && S.tests.some(t => t.status === "running"); i++) {
+      await new Promise(res => setTimeout(res, 6000));
+      let js; try { js = await bridge("get_agent_runs", { job_ids: S.tests.map(t => t.job) }); } catch { continue; }
+      let ch = false;
+      S.tests.forEach(t => { const j = js.jobs[t.job]; if (t.status === "running" && j && j.status !== "running") { ch = true; if (j.status === "done") { t.status = "done"; t.r = j.result; } else { t.status = "error"; t.error = j.error || "The run was lost. Run it again."; } } });
+      if (ch) { renderTests(); touch(); }
+    }
+  } catch (e) { note.innerHTML = `<span class="err">${esc(errText(e))}</span>`; }
+  finally { if ($("runTest")) $("runTest").disabled = false; }
+}
+
+boot();
+})();
+</script>
